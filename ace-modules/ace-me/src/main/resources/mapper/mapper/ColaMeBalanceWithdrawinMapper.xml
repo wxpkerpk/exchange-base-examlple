@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.security.me.mapper.ColaMeBalanceWithdrawinMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.bitcola.me.entity.ColaMeBalanceWithdrawin" id="colaMeBalanceWithdrawinMap">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="coinCode" column="coin_code"/>
+        <result property="number" column="number"/>
+        <result property="realNumber" column="real_number"/>
+        <result property="type" column="type"/>
+        <result property="address" column="address"/>
+        <result property="note" column="note"/>
+        <result property="status" column="status"/>
+        <result property="date" column="date"/>
+        <result property="txId" column="tx_id"/>
+        <result property="fees" column="fees"/>
+        <result property="confirmations" column="confirmations"/>
+        <result property="confirmationNumber" column="confirmation_number"/>
+        <result property="icon" column="icon"/>
+        <result property="reason" column="reason"/>
+    </resultMap>
+
+    <resultMap id="exchangeLog" type="com.bitcola.caculate.entity.ExchangeLog">
+        <id column="id" jdbcType="VARCHAR" property="id"/>
+        <result column="user_id" jdbcType="VARCHAR" property="fromUserId"/>
+        <result column="to_user_id" jdbcType="VARCHAR" property="toUserId"/>
+        <result column="from_order_id" jdbcType="VARCHAR" property="fromOrderId"/>
+        <result column="to_order_id" jdbcType="VARCHAR" property="toOrderId"/>
+        <result column="time" jdbcType="DATE" property="time"/>
+        <result column="code" jdbcType="VARCHAR" property="code"/>
+        <result column="type" jdbcType="VARCHAR" property="type"/>
+        <result column="price" jdbcType="DECIMAL" property="price"/>
+
+        <result column="from_count" jdbcType="DECIMAL" property="fromCount"/>
+        <result column="to_count" jdbcType="DECIMAL" property="toCount"/>
+        <result column="from_fee" jdbcType="DECIMAL" property="fromFee"/>
+        <result column="to_fee" jdbcType="DECIMAL" property="toFee"/>
+        <result column="from_fee_coin_code" jdbcType="VARCHAR" property="fromFeeCoinCode"/>
+        <result column="to_fee_coin_code" jdbcType="VARCHAR" property="toFeeCoinCode"/>
+        <result column="sign" jdbcType="VARCHAR" property="sign"/>
+        <result column="from_code" jdbcType="VARCHAR" property="fromCode"/>
+
+        <result column="to_code" jdbcType="VARCHAR" property="toCode"/>
+        <result column="confirmations" jdbcType="VARCHAR" property="confirmations"/>
+        <result column="confirmation_number" jdbcType="VARCHAR" property="confirmationNumber"/>
+
+
+    </resultMap>
+
+    <resultMap id="chainBalanceMap" type="com.bitcola.exchange.security.common.msg.ColaChainBalance">
+        <result column="coin_code" property="coinCode"/>
+        <result column="balance" property="balance"/>
+        <result column="fee_coin_code" property="feeCoinCode"/>
+        <result column="fee_balance" property="feeBalance"/>
+        <result column="fee_limit" property="feeLimit"/>
+        <result column="module" property="module"/>
+    </resultMap>
+
+
+
+    <!--冲提币记录-->
+    <select id="list" resultMap="colaMeBalanceWithdrawinMap">
+        select * from ag_admin_v1."cola_me_balance_withdrawin"
+        where "coin_code" = #{coincode} and "user_id" = #{userid} and "date" &lt; #{timestamp}
+        <if test="keyWord != null and keyWord != ''">
+            and (tx_id = #{keyWord} or id like '%'||#{keyWord}||'%' or number||'' like '%'||#{keyWord}||'%')
+        </if>
+        <if test="startTime != null and startTime != 0">
+            and date > #{startTime}
+        </if>
+        <if test="endTime != null and endTime != 0">
+            and date &lt; #{endTime}
+        </if>
+        <if test="type != null and type != ''">
+            and type = #{type}
+        </if>
+        order by date desc limit #{size}
+    </select>
+
+    <!--用户当日提现数量-->
+    <select id="getTodayNumber" resultType="decimal">
+        select count("number") from ag_admin_v1."cola_me_balance_withdrawin"
+        where "user_id" = #{userid} and "coin_code" = #{coincode} and "type"= 'withdraw' and "date" > #{date}
+    </select>
+
+    <!--当日提现总次数-->
+    <select id="getTodayTime" resultType="int">
+        select count(1) from ag_admin_v1."cola_me_balance_withdrawin"
+        where "user_id" = #{userid} and "type" = 'withdraw' and "date" > #{date}
+    </select>
+
+    <select id="detail" resultType="com.bitcola.exchange.security.me.vo.InWithdrawDetail">
+        select t1.id as orderId,t1.coin_code as coinCode,t1.icon,t1.number,t1.type,t1.tx_id as txId,t2.block_browser as blockBrowser,
+          t1.address,t1.date as time,t1.real_number as toAccount,t1.fees,t1.status,t1.confirmations||'/'||t1.confirmation_number as confirmations,
+          t1.note
+        from ag_admin_v1.cola_me_balance_withdrawin as t1 left join ag_admin_v1.cola_coin as t2 on t1.coin_code = t2.coin_code
+        where t1.id = #{orderId}
+    </select>
+
+    <select id="recentExchangeLog" resultMap="exchangeLog">
+        select * from ag_admin_v1.cola_exchange_log where user_id = #{userID} or to_user_id = #{userID} order by time desc limit 20
+    </select>
+
+    <insert id="insertAbnormal">
+        insert into ag_admin_v1.cola_admin_abnormal (id,record_id,time,user_id,reason,status,result)
+        values (#{id},#{recordId},#{time},#{userId},#{reason},#{status},#{result})
+    </insert>
+
+    <select id="listFinancial" resultType="java.util.Map">
+        select coin_code as coin,account,action_type as action from ag_admin_v1.v_cola_financial_records
+        where user_id = #{userID}
+    </select>
+
+
+    <update id="perWithdraw">
+        update ag_admin_v1.cola_me_balance set balance_frozen = balance_frozen+#{number} , balance_available = balance_available-#{number}
+                , sign = ag_admin_v1.makesign(id,balance_available-#{number},balance_frozen+#{number},#{key})
+        where user_id = #{userId} and coin_code = #{coinCode} and balance_available-#{number} >= 0
+        and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{key}) = true
+    </update>
+
+    <select id="checkBalance" resultType="java.lang.Integer">
+        select count(1) from ag_admin_v1.cola_me_balance
+        where ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{key}) = false and user_id = #{userId}
+    </select>
+
+    <update id="checkSuccess">
+        update ag_admin_v1.cola_me_balance_withdrawin
+        set status = #{status}, sign = md5(#{key}||id||user_id||#{status}||FLOOR(number))
+        where id = #{id} and sign = md5(#{key}||id||user_id||status||FLOOR(number))
+    </update>
+
+    <select id="getAllChainBalance" resultMap="chainBalanceMap">
+        select * from ag_admin_v1.cola_chain_balance
+    </select>
+
+    <update id="updateChainBalanceById">
+        update ag_admin_v1.cola_chain_balance set balance = #{balance},fee_balance = #{feeBalance} where coin_code = #{coinCode}
+    </update>
+
+    <select id="getChainBalanceByCoinCode" resultMap="chainBalanceMap">
+        select * from ag_admin_v1.cola_chain_balance where coin_code = #{coinCode}
+    </select>
+
+</mapper>

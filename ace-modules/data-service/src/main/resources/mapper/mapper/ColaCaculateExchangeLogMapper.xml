@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitcola.dataservice.mapper.ColaCaculateExchangeLogMapper">
+
+
+    <resultMap id="exchangeLog" type="com.bitcola.caculate.entity.ExchangeLog">
+        <id column="id" jdbcType="VARCHAR" property="id"/>
+        <result column="user_id" jdbcType="VARCHAR" property="fromUserId"/>
+        <result column="to_user_id" jdbcType="VARCHAR" property="toUserId"/>
+        <result column="from_order_id" jdbcType="VARCHAR" property="fromOrderId"/>
+        <result column="to_order_id" jdbcType="VARCHAR" property="toOrderId"/>
+        <result column="time" jdbcType="DATE" property="time"/>
+        <result column="code" jdbcType="VARCHAR" property="code"/>
+        <result column="type" jdbcType="VARCHAR" property="type"/>
+        <result column="price" jdbcType="DECIMAL" property="price"/>
+
+        <result column="from_count" jdbcType="DECIMAL" property="fromCount"/>
+        <result column="to_count" jdbcType="DECIMAL" property="toCount"/>
+        <result column="from_fee" jdbcType="DECIMAL" property="fromFee"/>
+        <result column="to_fee" jdbcType="DECIMAL" property="toFee"/>
+        <result column="from_fee_coin_code" jdbcType="VARCHAR" property="fromFeeCoinCode"/>
+        <result column="to_fee_coin_code" jdbcType="VARCHAR" property="toFeeCoinCode"/>
+        <result column="sign" jdbcType="VARCHAR" property="sign"/>
+        <result column="from_code" jdbcType="VARCHAR" property="fromCode"/>
+
+        <result column="to_code" jdbcType="VARCHAR" property="toCode"/>
+
+
+    </resultMap>
+
+
+    <!--用户交易记录-->
+    <select id="selectByUserId" resultMap="exchangeLog">
+        select * from ag_admin_v1."cola_exchange_log"
+        where
+            "user_id" = #{userid}
+
+        <if test="code !=null">
+            and "code" =#{code}
+        </if>
+        and code is not null
+        order by "time" desc
+        limit #{size} offset #{start}
+    </select>
+
+
+    <!--用户交易记录-->
+    <select id="selectByCode"  resultMap="exchangeLog">
+        select * from ag_admin_v1."cola_exchange_log"
+        where code = #{code}
+        order by time desc
+        limit #{size} offset #{start}
+    </select>
+
+
+    <select id="selectById"  resultMap="exchangeLog">
+        select * from ag_admin_v1."cola_exchange_log" where to_order_id = #{orderId} or from_order_id = #{orderId}  order by time desc
+    </select>
+
+
+
+    <insert id="insertBatch" parameterType="java.util.List">
+      insert into  ag_admin_v1."cola_exchange_log"
+          (id,time,code,price,from_order_id,type,from_fee,from_fee_coin_code,from_count,user_id,to_user_id,to_count,to_fee_coin_code,to_fee,from_code,to_code,to_order_id)
+          values
+        <foreach collection ="list" item="log" index= "index" separator =",">
+            (
+            #{log.id}, #{log.time},
+            #{log.code},  #{log.price},
+            #{log.fromOrderId},  #{log.type},
+            #{log.fromFee},  #{log.fromFeeCoinCode},
+            #{log.fromCount},  #{log.fromUserId},
+            #{log.toUserId},  #{log.toCount},
+            #{log.toFeeCoinCode},  #{log.toFee},
+            #{log.fromCode},  #{log.toCode}, #{log.toOrderId}
+            )
+        </foreach>
+
+
+    </insert>
+
+</mapper>

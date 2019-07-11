@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.ctc.mapper.ColaCtcBankCardMapper">
+
+    <resultMap id="bankCardMap" type="com.bitcola.ctc.ColaCtcBankCard">
+        <result column="card_id" property="cardId"/>
+        <result column="user_id" property="userId"/>
+        <result column="bank_type" property="bankType"/>
+        <result column="bank_address" property="bankAddress"/>
+        <result column="bank_name" property="bankName"/>
+        <result column="user_name" property="userName"/>
+        <result column="checked" property="checked"/>
+        <result column="document_number" property="documentNumber"/>
+        <result column="white_icon" property="whiteIcon"/>
+        <result column="icon" property="icon"/>
+    </resultMap>
+    <select id="list" resultMap="bankCardMap">
+        select * from ag_admin_v1.cola_ctc_bank_card where user_id = #{userId}
+    </select>
+
+    <select id="getBusinessList" resultMap="bankCardMap">
+        select t2.* from ag_admin_v1.cola_ctc_business_card as t1
+         inner join ag_admin_v1.cola_ctc_bank_card as t2 on t1.card_id = t2.card_id
+        where t1.available = 1
+    </select>
+    <select id="bankList" resultType="java.util.Map">
+        select id,bank_name as bank from ag_admin_v1.cola_bank
+    </select>
+    <select id="getBankInfo" resultType="java.util.Map">
+        select id,bank_name as bank,icon,white_icon as white from ag_admin_v1.cola_bank where id = #{bankId}
+    </select>
+</mapper>

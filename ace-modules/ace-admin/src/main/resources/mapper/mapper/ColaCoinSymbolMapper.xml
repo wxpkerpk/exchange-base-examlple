@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.security.admin.mapper.ColaCoinSymbolMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.bitcola.me.entity.ColaCoinSymbol" id="colaCoinSymbolMap">
+        <result property="id" column="id"/>
+        <result property="coinCode" column="coin_code"/>
+        <result property="symbol" column="symbol"/>
+        <result property="fees" column="fees"/>
+        <result property="icon" column="icon"/>
+        <result property="amountScale" column="amount_scale"/>
+        <result property="priceScale" column="price_scale"/>
+        <result property="min" column="min"/>
+        <result property="max" column="max"/>
+    </resultMap>
+
+
+
+</mapper>

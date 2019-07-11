@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitcola.exchange.security.admin.mapper.ColaCoinMapper">
+
+
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.bitcola.me.entity.ColaCoin" id="colaCoinMap">
+        <result property="id" column="id"/>
+        <result property="coinCode" column="coin_code"/>
+        <result property="coinCodeCn" column="coin_code_cn"/>
+        <result property="coinCodeEn" column="coin_code_en"/>
+        <result property="coinNote" column="coin_note"/>
+        <result property="website" column="website"/>
+        <result property="isNeedNote" column="is_need_note"/>
+        <result property="feesPercent" column="fees_percent"/>
+        <result property="feesFlat" column="fees_flat"/>
+        <result property="blockBrowser" column="block_browser"/>
+        <result property="isWithdraw" column="is_withdraw"/>
+        <result property="isRecharge" column="is_recharge"/>
+        <result property="isErc20" column="is_erc20"/>
+        <result property="withdrawOne" column="withdraw_one"/>
+        <result property="withdrawAmount" column="withdraw_amount"/>
+        <result property="withdrawAuto" column="withdraw_auto"/>
+        <result property="feesReal" column="fees_real"/>
+        <result property="icon" column="icon"/>
+        <result property="prec" column="prec"/>
+        <result property="rechargeDescriptionCn" column="recharge_description_cn"/>
+        <result property="rechargeDescriptionEn" column="recharge_description_en"/>
+        <result property="minWithdrawNumber" column="min_withdraw_number"/>
+        <result property="depositConfirmationNumber" column="deposit_confirmation_number"/>
+        <result property="confirmationNumber" column="confirmation_number"/>
+        <result property="sort" column="sort"/>
+    </resultMap>
+
+
+    <select id="coinApply" resultType="java.util.Map">
+        select * from ag_admin_v1.cola_new_coin_apply
+        <where>
+            <if test="userId!=null and userId!=''">
+                and user_id = #{userId}
+            </if>
+        </where>
+        order by to_number(user_id, '9999999999999999999') desc limit #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countCoinApply" resultType="java.lang.Long">
+        select count(1) from ag_admin_v1.cola_new_coin_apply
+        <where>
+            <if test="userId!=null and userId!=''">
+                and user_id = #{userId}
+            </if>
+        </where>
+    </select>
+
+    <insert id="insertCoinEosToken">
+        insert into ag_admin_v1.cola_chain_eos_token (coin_code, token_name, symbol, precision)
+                values (#{coinCode},#{tokenName},#{symbol},#{precision})
+    </insert>
+
+    <insert id="insertCoinEthToken">
+        insert into ag_admin_v1.cola_chain_eth_token (coin_code, contract, min_auto_transfer_to_hot)
+        VALUES (#{coinCode},#{contract},#{minAutoTransferToHot})
+    </insert>
+
+    <select id="eosTokenList" resultType="java.util.Map">
+        select coin_code as coin,symbol,token_name as tokenname,precision from ag_admin_v1.cola_chain_eos_token
+    </select>
+    <select id="ethTokenList" resultType="java.util.Map">
+        select coin_code as coin,contract from ag_admin_v1.cola_chain_eth_token
+    </select>
+    <select id="xlmTokenList" resultType="java.util.Map">
+        select coin_code as coin,token_code as tokencode,token_issuer as tokenIssuer from ag_admin_v1.cola_chain_xlm_token
+    </select>
+
+    <insert id="insertCoinXlmToken">
+        insert into ag_admin_v1.cola_chain_xlm_token (coin_code, token_code, token_issuer)
+        VALUES (#{coinCode},#{tokenCode},#{tokenIssuer})
+    </insert>
+
+</mapper>

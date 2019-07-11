@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.chain.mapper.ColaChainTTTokenMapper">
+
+    <select id="getToken" resultType="java.lang.String">
+        select contract from bitcola_chain.cola_chain_eth_token where coin_code = #{coinCode}
+    </select>
+
+
+    <select id="getCoinCode" resultType="java.lang.String">
+        select coin_code from bitcola_chain.cola_chain_eth_token where contract = #{contract}
+    </select>
+
+</mapper>

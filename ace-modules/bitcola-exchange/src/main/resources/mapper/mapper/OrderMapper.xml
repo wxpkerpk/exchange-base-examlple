@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.mapper.OrderMapper">
+
+    <resultMap id="order" type="com.bitcola.exchange.message.OrderMessage">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="timestamp" property="timestamp"/>
+        <result column="pair" property="pair"/>
+        <result column="direction" property="direction"/>
+        <result column="price" property="price"/>
+        <result column="number" property="number"/>
+        <result column="remain" property="remain"/>
+        <result column="status" property="status"/>
+        <result column="type" property="type"/>
+        <result column="average_price" property="averagePrice"/>
+        <result column="fee_rate" property="feeRate"/>
+    </resultMap>
+
+    <select id="selectUnSuccessOrder" resultMap="order">
+        select * from ag_admin_v1.cola_exchange_order where (status = 'PENDING' or status = 'PARTIAL_COMPLETED') and pair = #{pair} order by timestamp asc limit #{size} OFFSET (#{size}*(#{page}-1))
+    </select>
+
+    <insert id="insertOrder">
+        insert into ag_admin_v1.cola_exchange_order (id, pair, direction, user_id, timestamp, price, number, remain, status, type, average_price, fee_rate)
+        values (#{id},#{pair},#{direction},#{userId},#{timestamp},#{price},#{number},#{remain},#{status},#{type},#{averagePrice},#{feeRate})
+    </insert>
+
+    <select id="selectOrders" resultMap="order">
+        select * from ag_admin_v1.cola_exchange_order where id in
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <update id="batchUpdate">
+        update ag_admin_v1.cola_exchange_order
+        set remain =
+        <foreach collection="list" index="index" item="item" open="case id" separator=" " close="end">
+            when #{item.id} then #{item.remain}
+        </foreach>
+        , status =
+        <foreach collection="list" index="index" item="item" open="case id" separator=" " close="end">
+            when #{item.id} then #{item.status}
+        </foreach>
+        ,  average_price =
+        <foreach collection="list" index="index" item="item" open="case id" separator=" " close="end">
+            when #{item.id} then #{item.averagePrice}
+        </foreach>
+        where id in
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item.id}
+        </foreach>
+    </update>
+
+    <select id="selectOrderByPair" resultMap="order">
+        select * from ag_admin_v1.cola_exchange_order where pair = #{pair} and user_id = #{userId} and (status = 'PENDING' or status = 'PARTIAL_COMPLETED')
+    </select>
+
+</mapper>

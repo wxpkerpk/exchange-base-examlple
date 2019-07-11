@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitcola.exchange.security.admin.mapper.ColaWorkMapper">
+
+    <select id="countWorkOrder" resultType="java.lang.Long">
+        select count(1) from ag_admin_v1.cola_me_work_order where status &lt;> 'Processed'
+    </select>
+    <select id="countWithdraw" resultType="java.lang.Long">
+        select count(1) from ag_admin_v1.cola_me_balance_withdrawin where type = 'Withdraw'
+          and (status = 'Checking' or status = 'Exported')
+    </select>
+    <select id="countKyc" resultType="java.lang.Long">
+        select count(1) from ag_admin_v1.cola_user_kyc where kyc_status = '0'
+    </select>
+
+</mapper>

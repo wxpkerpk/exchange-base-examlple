@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.mapper.ColaSystemBalanceMapper">
+    <insert id="batchInsert" parameterType="java.util.List">
+        insert into  ag_admin_v1.cola_system_balance
+        (id,action,from_user,to_user,amount,coin_code,time,type,description)
+        values
+        <foreach collection ="list" item="record" index= "index" separator =",">
+            (
+            #{record.id}, #{record.action},
+            #{record.fromUser},  #{record.toUser},
+            #{record.amount},  #{record.coinCode},
+            #{record.time},  #{record.type},
+            #{record.description}
+            )
+        </foreach>
+    </insert>
+    <insert id="batchInsertReward" parameterType="java.util.List">
+        insert into  ag_admin_v1.reward_log
+        (id,user_id,coin_code,count,time)
+        values
+        <foreach collection ="list" item="record" index= "index" separator =",">
+            (
+            #{record.id}, #{record.userId},
+            #{record.coinCode},  #{record.count},
+            #{record.time}
+            )
+        </foreach>
+    </insert>
+</mapper>

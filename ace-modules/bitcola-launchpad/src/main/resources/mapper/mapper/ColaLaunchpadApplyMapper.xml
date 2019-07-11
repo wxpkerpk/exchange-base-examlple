@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.launchpad.mapper.ColaLaunchpadApplyMapper">
+
+    <resultMap id="projectMap" type="com.bitcola.exchange.launchpad.vo.ProjectParams">
+        <result column="id" property="id"/>
+        <result column="coin_code" property="coinCode"/>
+        <result column="timestamp" property="timestamp"/>
+        <result column="user_id" property="userId"/>
+        <result column="total_supply" property="totalSupply"/>
+        <result column="application" property="application"/>
+        <result column="website" property="website"/>
+        <result column="white_paper" property="whitePaper"/>
+        <result column="platform" property="platform"/>
+        <result column="community" property="communityStr"/>
+        <result column="detail" property="detailStr"/>
+        <result column="detail_cn" property="detailCnStr"/>
+    </resultMap>
+
+    <resultMap id="ieoMap" type="com.bitcola.exchange.launchpad.vo.IeoParams">
+        <result column="id" property="id"/>
+        <result column="project_id" property="projectId"/>
+        <result column="user_id" property="userId"/>
+        <result column="coin_code" property="coinCode"/>
+        <result column="start" property="start"/>
+        <result column="end" property="end"/>
+        <result column="status" property="status"/>
+        <result column="title_img" property="titleImg"/>
+        <result column="price" property="price"/>
+        <result column="number" property="number"/>
+        <result column="symbols" property="symbolStr"/>
+        <result column="issue_time" property="issueTime"/>
+        <result column="remain" property="remain"/>
+        <result column="reward" property="reward"/>
+        <result column="introduction" property="introduction"/>
+        <result column="title" property="title"/>
+        <result column="title_cn" property="titleCn"/>
+        <result column="introduction_cn" property="introductionCn"/>
+        <result column="allow_max_number" property="allowMaxNumber"/>
+        <result column="allow_min_number" property="allowMinNumber"/>
+        <result column="allow_total_number" property="allowTotalNumber"/>
+    </resultMap>
+
+    <insert id="saveProject">
+        insert into ag_admin_v1.cola_launchpad_project
+                (id, coin_code, timestamp, user_id, total_supply, application, website, white_paper, platform, community, detail, detail_cn)
+        values
+        (#{id},#{coinCode},#{timestamp},#{userId},#{totalSupply},#{application},#{website},#{whitePaper},#{platform},#{communityStr},#{detailStr},#{detailCnStr})
+    </insert>
+    <insert id="saveIeo">
+        insert into ag_admin_v1.cola_launchpad_project_ieo
+                (id, project_id, user_id, coin_code, start, "end", status, title_img, price, number,
+                 symbols, issue_time, remain, reward, introduction, title, introduction_cn,allow_max_number,allow_min_number,title_cn,allow_total_number)
+        VALUES
+                (#{id},#{projectId},#{userId},#{coinCode},#{start},#{end},#{status},#{titleImg},#{price},#{number},
+                 #{symbolStr},#{issueTime},#{remain},#{reward},#{introduction},#{title},#{introductionCn},#{allowMaxNumber},#{allowMinNumber},#{titleCn},#{allowTotalNumber})
+    </insert>
+
+    <select id="projectTotal" resultType="java.lang.Long">
+        select count(1) from ag_admin_v1.cola_launchpad_project
+    </select>
+
+    <select id="projectList" resultMap="projectMap">
+        select * from ag_admin_v1.cola_launchpad_project order by timestamp desc limit #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="ieoList" resultMap="ieoMap">
+        select * from ag_admin_v1.cola_launchpad_project_ieo where project_id = #{id} order by start desc
+    </select>
+
+    <update id="frozenProjectBalance">
+        update ag_admin_v1.cola_me_balance
+        set balance_available = balance_available - #{number},
+            balance_frozen = balance_frozen + #{number},
+            sign = ag_admin_v1.makesign(id,balance_available - #{number},balance_frozen + #{number},#{key})
+        where id = #{id} and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{key}) = true
+    </update>
+</mapper>

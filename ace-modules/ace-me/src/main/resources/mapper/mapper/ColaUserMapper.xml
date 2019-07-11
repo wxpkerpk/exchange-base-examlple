@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitcola.exchange.security.me.mapper.ColaUserMapper">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.bitcola.me.entity.ColaUser" id="colaUserMap">
+        <id property="inviteCode" column="invite_code"/>
+        <result property="sysUserId" column="sys_user_id"/>
+        <result property="moneyPassword" column="money_password"/>
+        <result property="withdrawTime" column="withdraw_time"/>
+        <result property="enable" column="enable"/>
+        <result property="inviter" column="inviter"/>
+        <result property="sign" column="sign"/>
+        <result property="avatar" column="avatar"/>
+        <result property="nickName" column="nick_name"/>
+    </resultMap>
+
+    <resultMap id="user" type="com.bitcola.me.entity.ColaUserEntity">
+        <id column="id" jdbcType="VARCHAR" property="ID" />
+        <result column="sys_user_id" jdbcType="VARCHAR" property="sysUserID" />
+        <result column="tel_phone" jdbcType="VARCHAR" property="telPhone" />
+        <result column="invite_code" jdbcType="VARCHAR" property="inviteCode" />
+        <result column="area_code" jdbcType="VARCHAR" property="areaCode" />
+        <result column="USERNAME" jdbcType="VARCHAR" property="username" />
+        <result column="email" jdbcType="VARCHAR" property="email" />
+        <result column="password" jdbcType="VARCHAR" property="password" />
+        <result column="money_password" jdbcType="VARCHAR" property="moneyPassword" />
+        <result column="inviter" jdbcType="VARCHAR" property="inviter" />
+        <result column="enable" jdbcType="INTEGER" property="enable" />
+        <result column="withdraw_time" jdbcType="INTEGER" property="withdrawTime" />
+        <result column="nick_name" jdbcType="VARCHAR" property="nickName" />
+        <result property="avatar" jdbcType="VARCHAR" column="avatar"/>
+        <result property="sign" jdbcType="VARCHAR" column="sign"/>
+        <result property="googleSecretKey" jdbcType="VARCHAR" column="google_secret_key"/>
+        <result property="isUsernameUpdate" jdbcType="INTEGER" column="is_username_update"/>
+        <result property="time" column="time"/>
+        <result property="language" column="language"/>
+        <result property="antiPhishingCode" jdbcType="VARCHAR" column="anti_phishing_code"/>
+
+    </resultMap>
+
+
+    <select id="getUserId" resultType="java.lang.Integer">
+        select id from ag_admin_v1.base_user where username = #{username}
+    </select>
+
+    <select id="getUser" resultMap="user">
+        select t1.*,t2."tel_phone",t2."email",t2."password",t2."username",t2."is_username_update",t2."area_code"
+        from ag_admin_v1."cola_user" as t1,ag_admin_v1."base_user" as t2
+        where t1."sys_user_id" = t2."id"
+        <if test="email != null and email != ''">
+            and t2."email" = #{email}
+        </if>
+        <if test="tel != null and tel != ''">
+            and t2."tel_phone" = #{tel} and t2."area_code" = #{areacode}
+        </if>
+        <if test="username != null and username != ''">
+            and t2."username" = #{username}
+        </if>
+    </select>
+
+    <!--用户信息-->
+    <select id="info" resultMap="user">
+        select t1.*,t2."tel_phone",t2."email",t2."password",t2."username",t2."is_username_update",t2."area_code"
+        from ag_admin_v1."cola_user" as t1,ag_admin_v1."base_user" as t2
+        where t1."sys_user_id" = t2."id" and t2."id" = #{userid}
+    </select>
+
+
+    <!--向系统表添加新用户-->
+    <insert id="insertSysUser">
+        insert into ag_admin_v1."base_user" ("id","username","area_code","tel_phone","email","password","is_username_update")
+        values (
+             #{id},#{username},#{areaCode}, #{telPhone},#{email},#{password},0
+        )
+    </insert>
+
+    <!--注册用户-->
+    <insert id="insertUser">
+        insert into ag_admin_v1."cola_user" (invite_code,"sys_user_id","enable","inviter","avatar","nick_name",time,withdraw_time)
+        values (#{inviteCode},#{sysUserID},1,#{inviter},#{avatar},#{nickName},#{time},#{withdrawTime})
+    </insert>
+
+    <!--检查账号是否已经注册-->
+    <select id="checkRepeat" resultType="int">
+        select count(1) from ag_admin_v1."base_user"
+         <where>
+             <if test="email != null and email != ''">
+                 "email" = #{email}
+             </if>
+             <if test="telphone != null and telphone != ''">
+                 "tel_phone" = #{telphone} and "area_code" = #{areacode}
+             </if>
+             <if test="username != null and username != ''">
+                 "username" = #{username}
+             </if>
+         </where>
+    </select>
+
+    <!--设置资金密码-->
+    <update id="setMoneyPassword" >
+        update ag_admin_v1."cola_user" set "money_password" = #{moneypassword} where "sys_user_id" = #{userid}
+    </update>
+
+
+    <!--设置用户名-->
+    <update id="resetUsername" >
+        update ag_admin_v1."base_user" as t1 set "username" = #{newusername},"is_username_update" = 1 where t1."id" = #{userid}
+    </update>
+
+    <!--重置密码-->
+    <update id="setUserInfo">
+        update ag_admin_v1."cola_user" set "sign" = #{sign}
+        <if test="avatar!=null and avatar!=''">
+            ,"avatar" = #{avatar}
+        </if>
+        <if test="nickname!=null and nickname!=''">
+            ,"nick_name" = #{nickname}
+        </if>
+        where "sys_user_id" = #{userid}
+    </update>
+
+    <update id="resetPassword" >
+        update ag_admin_v1."base_user" as t1 set  "password" = #{newpassword} where t1."id" = #{userid}
+    </update>
+
+    <update id="saveSecretKey">
+        update ag_admin_v1."cola_user" set "google_secret_key" = #{googleSecretKey} where "sys_user_id" = #{sysUserID}
+    </update>
+
+    <update id="setTelPhone">
+        update ag_admin_v1."base_user" set area_code = #{areaCode},"tel_phone" = #{telPhone} where "id" = #{sysUserID}
+    </update>
+
+    <update id="setEmail">
+        update ag_admin_v1."base_user" set "email" = #{email} where "id" = #{sysUserID}
+    </update>
+
+    <update id="antiPhishingCode">
+        update ag_admin_v1."cola_user" set "anti_phishing_code" = #{code} where "sys_user_id" = #{userid}
+    </update>
+
+    <select id="getAntiPhishingCode" resultType="java.lang.String">
+        select "anti_phishing_code" from ag_admin_v1."cola_user" where "sys_user_id" = #{userid}
+    </select>
+
+    <select id="securityStatus" resultType="java.util.Map">
+        select
+            u."password" as password,
+            c."money_password" as pin,
+            c."google_secret_key" as google,
+            u."email" as email,
+            u."tel_phone" as phone,
+            c."anti_phishing_code" as fish
+        from
+             ag_admin_v1."cola_user" as c,
+             ag_admin_v1."base_user" as u
+        where
+            c."sys_user_id" = #{userid} and u."id" = c."sys_user_id"
+    </select>
+
+    <update id="googleAuthentication">
+        update ag_admin_v1."cola_user" set "google_secret_key" = #{tokenkey} where "sys_user_id" = #{userid}
+    </update>
+
+    <update id="cancelGoogleAuthentication">
+        update ag_admin_v1."cola_user" set "google_secret_key" = null where "sys_user_id" = #{userid}
+    </update>
+
+    <select id="getUserIdIndex" resultType="java.lang.Integer">
+        select register_max_id from ag_admin_v1.cola_id_index
+    </select>
+
+    <update id="updateUserIdIndex">
+        update ag_admin_v1.cola_id_index set register_max_id = register_max_id + 1
+    </update>
+
+    <select id="exist2FA" resultType="java.lang.Integer">
+        select count(1) from ag_admin_v1.cola_user_login_device where user_id = #{id} and ip = #{ip} and device = #{colaDeviceId}
+    </select>
+
+    <insert id="save2FA">
+        insert into ag_admin_v1.cola_user_login_device (id,user_id,ip,device) values (#{id},#{userId},#{ip},#{colaDeviceId})
+    </insert>
+
+    <select id="verificationLogin" resultType="java.lang.Integer">
+        select count(1) from ag_admin_v1.cola_user_login_device where user_id = #{id}
+        and  (device = #{colaDeviceId} or ip = #{ip})  and device is not null
+    </select>
+
+    <select id="getUserInfoByIds" resultType="com.bitcola.exchange.security.common.vo.UsersInfoVo">
+        select t2.id,t2.username,t1.nick_name as nickName,t1.sign,t1.avatar
+        from ag_admin_v1."cola_user" as t1,ag_admin_v1.base_user as t2
+        where t1."sys_user_id" = t2."id" and t2."id" in
+        <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="searchUser" resultType="com.bitcola.exchange.security.common.vo.UsersInfoVo">
+        select t2.id,t2.username,t1.nick_name as nickName,t1.sign,t1.avatar
+        from ag_admin_v1."cola_user" as t1,ag_admin_v1.base_user as t2
+        where t1."sys_user_id" = t2."id"
+          and ( t2.username = #{keyWord} or t2.tel_phone = #{keyWord} or t2.email = #{keyWord} )
+    </select>
+
+    <update id="setColaLanguage">
+        update ag_admin_v1.cola_user set language = #{colaLanguage} where sys_user_id = #{userID}
+    </update>
+
+    <select id="getNoImUser" resultType="java.util.Map">
+      select   sys_user_id as id,nick_name as nickname from ag_admin_v1.cola_user where sys_user_id not in
+        <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    <select id="getUsername" resultType="java.lang.String">
+        select username from ag_admin_v1.base_user where id = #{id}
+    </select>
+
+</mapper>

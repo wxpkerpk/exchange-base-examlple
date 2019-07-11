@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>ace-security</artifactId>
+        <groupId>com.bitcola.exchange</groupId>
+        <version>2.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>pom</packaging>
+    <artifactId>ace-modules</artifactId>
+
+    <modules>
+        <module>ace-admin</module>
+        <module>ace-interface</module>
+        <module>ace-generator</module>
+        <module>ace-tool</module>
+        <!--<module>exchange-caculate</module>-->
+        <module>bitcola-entity</module>
+        <module>data-service</module>
+        <module>distribute-klock</module>
+        <module>ace-me</module>
+        <module>ace-community</module>
+        <module>bitcola-push</module>
+        <module>bitcola-chat</module>
+        <module>bitcola-activity</module>
+        <module>chain-kafka</module>
+        <module>chain-kafka-server</module>
+        <module>chain-kafka-client</module>
+        <module>bitcola-exchange</module>
+        <module>bitcola-launchpad</module>
+        <module>bitcola-ctc</module>
+    </modules>
+</project>

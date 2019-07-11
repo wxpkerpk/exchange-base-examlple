@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitcola.exchange.launchpad.mapper.ColaResonanceDestroyMapper">
+
+    <select id="countNumber" resultType="java.math.BigDecimal">
+        select coalesce(sum(number),0) from ag_admin_v1.cola_launchpad_resonance_destory where coin_code = #{coinCode}
+    </select>
+
+</mapper>

@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.launchpad.mapper.ColaLaunchpadProjectIeoMapper">
+
+    <resultMap id="projectList" type="com.bitcola.exchange.launchpad.dto.ColaLaunchpadProjectList">
+        <result column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="title_img" property="titleImg"/>
+        <result column="introduction" property="introduction"/>
+        <result column="introduction_cn" property="introductionCn"/>
+        <result column="coin_code" property="coinCode"/>
+        <result column="number" property="number"/>
+        <result column="start" property="start"/>
+        <result column="end" property="end"/>
+        <result column="status" property="dbStatus"/>
+        <result column="reward" property="reward"/>
+        <result column="title_cn" property="titleCn"/>
+    </resultMap>
+    <resultMap id="detailMap" type="com.bitcola.exchange.launchpad.dto.ColaLaunchpadProjectDto">
+        <result column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="title_img" property="titleImg"/>
+        <result column="introduction" property="introduction"/>
+        <result column="introduction_cn" property="introductionCn"/>
+        <result column="coin_code" property="coinCode"/>
+        <result column="start" property="start"/>
+        <result column="end" property="end"/>
+        <result column="status" property="status"/>
+        <result column="number" property="currentSupply"/>
+        <result column="reward" property="reward"/>
+        <result column="symbols" property="symbol"/>
+        <result column="price" property="price"/>
+        <result column="total_supply" property="totalSupply"/>
+        <result column="application" property="application"/>
+        <result column="website" property="website"/>
+        <result column="white_paper" property="whitePaper"/>
+        <result column="platform" property="platform"/>
+        <result column="community" property="community"/>
+        <result column="issue_time" property="issueTime"/>
+        <result column="detail" property="detail"/>
+        <result column="detail_cn" property="detailCn"/>
+        <result column="remain" property="remain"/>
+        <result column="title_cn" property="titleCn"/>
+        <result column="allow_min_number" property="allowMinNumber"/>
+        <result column="allow_max_number" property="allowMaxNumber"/>
+    </resultMap>
+    <resultMap id="ieoMap" type="com.bitcola.exchange.launchpad.entity.ColaLaunchpadProjectIeo">
+        <result column="id" property="id"/>
+        <result column="project_id" property="projectId"/>
+        <result column="user_id" property="userId"/>
+        <result column="coin_code" property="coinCode"/>
+        <result column="start" property="start"/>
+        <result column="end" property="end"/>
+        <result column="status" property="status"/>
+        <result column="title_img" property="titleImg"/>
+        <result column="price" property="price"/>
+        <result column="number" property="number"/>
+        <result column="symbols" property="symbols"/>
+        <result column="issue_time" property="issueTime"/>
+        <result column="remain" property="remain"/>
+        <result column="reward" property="reward"/>
+        <result column="introduction" property="introduction"/>
+        <result column="title" property="title"/>
+        <result column="allow_max_number" property="allowMaxNumber"/>
+        <result column="allow_min_number" property="allowMinNumber"/>
+        <result column="allow_total_number" property="allowTotalNumber"/>
+    </resultMap>
+
+    <select id="total" resultType="java.lang.Long">
+        select count(1) from ag_admin_v1.cola_launchpad_project_ieo
+    </select>
+
+    <select id="list" resultMap="projectList">
+        select id,title,title_img,introduction,introduction_cn,coin_code,number,start,"end",reward,status,title_cn
+        from ag_admin_v1.cola_launchpad_project_ieo order by status limit #{size} OFFSET (#{size}*(#{page}-1))
+    </select>
+
+    <update id="updateProjectStatus">
+        update ag_admin_v1.cola_launchpad_project_ieo set status = #{status} where id = #{id}
+    </update>
+
+    <select id="detail" resultMap="detailMap">
+        select t1.id,
+               t1.title,
+               t1.title_img,
+               t1.title_cn,
+               t1.introduction,
+               t1.introduction_cn,
+               t1.coin_code,
+               t1.status,
+               t1.number,
+               t1.start,
+               t1."end",
+               t1.reward,
+               t1.symbols,
+               t1.price,
+               t2.total_supply,
+               t2.application,
+               t2.website,
+               t2.white_paper,
+               t2.platform,
+               t2.community,
+               t1.issue_time,
+               t2.community,
+               t2.detail,
+               t2.detail_cn,
+               t1.remain,
+               t1.allow_min_number,
+               t1.allow_max_number
+        from ag_admin_v1.cola_launchpad_project_ieo as t1
+        left join ag_admin_v1.cola_launchpad_project as t2 on t1.project_id = t2.id
+        where t1.id = #{id};
+    </select>
+
+    <select id="getUserPin" resultType="java.lang.String">
+        select money_password from ag_admin_v1.cola_user where sys_user_id = #{userId}
+    </select>
+
+    <update id="frozenUserBalance">
+        update ag_admin_v1.cola_me_balance
+        set balance_available = balance_available - #{number},
+            balance_frozen = balance_frozen + #{number},
+            sign = ag_admin_v1.makesign(id,balance_available - #{number},balance_frozen + #{number},#{key})
+        where id = #{id} and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{key}) = true
+    </update>
+
+    <select id="selectBatch" resultType="java.lang.String">
+        select id from ag_admin_v1.cola_me_balance
+        where id in
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item.id}
+        </foreach>
+    </select>
+
+    <insert id="batchInsertExchangeLog"  parameterType="java.util.List">
+        insert into  ag_admin_v1.cola_launchpad_exchange_log
+        (id, project_id, user_id, coin_code, price, number, status, symbol, timestamp,reward)
+        values
+        <foreach collection ="list" item="record" index= "index" separator =",">
+            (
+            #{record.id}, #{record.projectId},
+            #{record.userId},  #{record.coinCode},
+            #{record.price},  #{record.number},
+            #{record.status},  #{record.symbol},
+            #{record.timestamp}, #{record.reward}
+            )
+        </foreach>
+    </insert>
+
+    <update id="updateProjectRemainAndStatus">
+        update ag_admin_v1.cola_launchpad_project_ieo set remain = remain - #{sellNumber},status = #{status} where id = #{id}
+    </update>
+
+    <select id="selectIeoProject" resultType="java.util.Map">
+        select id,remain,"end" from ag_admin_v1.cola_launchpad_project_ieo where status &lt; 2
+    </select>
+
+    <select id="selectProjectById" resultMap="ieoMap">
+        select id,coin_code,user_id,project_id,start,"end",status,title,title_img,price,number,symbols,issue_time,remain,reward,introduction,allow_max_number,allow_min_number,allow_total_number
+        from ag_admin_v1.cola_launchpad_project_ieo where id = #{id}
+    </select>
+
+    <update id="batchUpdateUserBalance">
+        update ag_admin_v1.cola_me_balance
+        set balance_available = balance_available +
+        <foreach collection="list" index="index" item="item" open="case id" separator=" " close="end">
+            when #{item.id} then #{item.available}
+        </foreach>
+        ,balance_frozen = balance_frozen +
+        <foreach collection="list" index="index" item="item" open="case id" separator=" " close="end">
+            when #{item.id} then #{item.frozen}
+        </foreach>
+        ,sign = ag_admin_v1.makesign(id,balance_available +
+        <foreach collection="list" index="index" item="item" open="case id" separator=" " close="end">
+            when #{item.id} then #{item.available}
+        </foreach>
+        ,balance_frozen +
+        <foreach collection="list" index="index" item="item" open="case id" separator=" " close="end">
+            when #{item.id} then #{item.frozen}
+        </foreach>
+        ,#{balanceKey})
+        where id in
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item.id}
+        </foreach>
+        and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{balanceKey}) = true
+    </update>
+
+    <select id="getUserPinAndKycByIds" resultType="com.bitcola.exchange.launchpad.dto.ColaUserStatus">
+        select t1.sys_user_id as id,t1.money_password as pin,t2.kyc_status as kyc
+        from ag_admin_v1.cola_user as t1
+        left join ag_admin_v1.cola_user_kyc as t2 on t1.sys_user_id = t2.user_id
+        where t1.sys_user_id in
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectProjectByIds" resultMap="ieoMap">
+        select id,coin_code, user_id ,project_id,start,"end",status,title,title_img,price,number,symbols,issue_time ,remain,reward,introduction,allow_max_number,allow_min_number,allow_total_number
+        from ag_admin_v1.cola_launchpad_project_ieo where id in
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+</mapper>

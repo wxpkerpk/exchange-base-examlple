@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.mapper.BalanceMapper">
+   <update id="frozen">
+       update ag_admin_v1.cola_me_balance set balance_available = balance_available - #{number} ,balance_frozen = balance_frozen+#{number}
+               , sign = ag_admin_v1.makesign(id,balance_available-#{number},balance_frozen+#{number},#{balanceKey})
+       where id = #{id} and balance_available - #{number} >= 0
+         and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{balanceKey}) = true
+   </update>
+   <update id="unFrozen">
+       update ag_admin_v1.cola_me_balance set balance_frozen = balance_frozen - #{number} ,balance_available = balance_available+#{back}
+               , sign = ag_admin_v1.makesign(id,balance_available+#{back},balance_frozen - #{number},#{balanceKey})
+       where id = #{id} and balance_frozen - #{number} >= 0
+         and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{balanceKey}) = true
+   </update>
+   <update id="addAsset">
+       update ag_admin_v1.cola_me_balance set balance_available = balance_available+#{number}
+               , sign = ag_admin_v1.makesign(id,balance_available+#{number},balance_frozen,#{balanceKey})
+       where id = #{id}
+         and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{balanceKey}) = true
+   </update>
+
+    <select id="getInviterUserId" resultType="java.lang.String">
+        select t2.sys_user_id from ag_admin_v1.cola_user as t1 inner join ag_admin_v1.cola_user as t2 on t1.inviter = t2.invite_code
+        where t1.sys_user_id = #{userId}
+    </select>
+
+    <select id="getInviterUserIdList" resultType="java.util.Map">
+        select t2.sys_user_id as inviter,t1.sys_user_id as u from ag_admin_v1.cola_user as t1
+        inner join ag_admin_v1.cola_user as t2 on t1.inviter = t2.invite_code
+        where t1.sys_user_id in
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    <select id="selectBatch" resultType="java.util.Map">
+        select id,balance_available,balance_frozen from ag_admin_v1.cola_me_balance
+        where id in
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item.id}
+        </foreach>
+    </select>
+
+    <update id="batchUpdate">
+        update ag_admin_v1.cola_me_balance
+        set balance_available = balance_available +
+        <foreach collection="list" index="index" item="item" open="case id" separator=" " close="end">
+            when #{item.id} then #{item.available}
+        </foreach>
+        ,balance_frozen = balance_frozen +
+        <foreach collection="list" index="index" item="item" open="case id" separator=" " close="end">
+            when #{item.id} then #{item.frozen}
+        </foreach>
+        ,sign = ag_admin_v1.makesign(id,balance_available +
+        <foreach collection="list" index="index" item="item" open="case id" separator=" " close="end">
+            when #{item.id} then #{item.available}
+        </foreach>
+        ,balance_frozen +
+        <foreach collection="list" index="index" item="item" open="case id" separator=" " close="end">
+            when #{item.id} then #{item.frozen}
+        </foreach>
+        ,#{balanceKey})
+        where id in
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item.id}
+        </foreach>
+        and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{balanceKey}) = true
+    </update>
+
+    <select id="selectById" resultType="java.lang.String">
+        select id from ag_admin_v1.cola_me_balance where id = #{id}
+    </select>
+
+</mapper>

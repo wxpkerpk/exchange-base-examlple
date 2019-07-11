@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.chain.mapper.ColaChainDepositMapper">
+    <resultMap id="depositMap" type="com.bitcola.exchange.security.common.msg.ColaChainDepositResponse">
+        <id property="hash" column="hash"/>
+        <result property="amount" column="amount"/>
+        <result property="timestamp" column="timestamp"/>
+        <result property="coinCode" column="coin_code"/>
+        <result property="module" column="module"/>
+        <result property="status" column="status"/>
+        <result property="toAddress" column="to_address"/>
+        <result property="memo" column="memo"/>
+        <result property="orderId" column="order_id"/>
+    </resultMap>
+
+    <select id="unRecord" resultMap="depositMap">
+        select * from bitcola_chain.cola_chain_deposit where order_id is null and module = #{module}
+    </select>
+
+    <select id="unConfirm" resultMap="depositMap">
+        select * from bitcola_chain.cola_chain_deposit where status = 'NOT_CONFIRM' and module = #{module}
+    </select>
+
+    <select id="getDepositOrder" resultMap="depositMap">
+        select * from bitcola_chain.cola_chain_deposit where module = #{module} and timestamp > #{start} and timestamp &lt; #{end}
+    </select>
+
+</mapper>

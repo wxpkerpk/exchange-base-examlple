@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitcola.exchange.security.admin.mapper.ColaConsumerMapper">
+
+    <resultMap id="consumer" type="com.bitcola.exchange.security.admin.entity.Consumer">
+        <id column="id" property="id"/>
+        <result property="description" column="description"/>
+    </resultMap>
+
+    <insert id="insertConsumer">
+        insert into ag_admin_v1.cola_chat_consumer (id,description)
+                values (#{id},#{description})
+    </insert>
+
+    <select id="consumerList" resultMap="consumer">
+        select id,description from ag_admin_v1.cola_chat_consumer
+    </select>
+
+    <select id="consumerSelectById" resultMap="consumer">
+        select id,description from ag_admin_v1.cola_chat_consumer where id=(#{id})
+    </select>
+
+    <delete id="deleteConsumer">
+        delete from ag_admin_v1.cola_chat_consumer where "id" = #{id}
+    </delete>
+</mapper>

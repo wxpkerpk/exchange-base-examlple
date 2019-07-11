@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.security.admin.mapper.ColaKycMapper">
+
+    <select id="kycDetail" resultType="java.util.Map">
+        select
+                DISTINCT ON (1) t7.user_id,
+                            t2.tel_phone as user_telephone,
+                            t2.email as user_email,
+                            t4.sys_user_id inviter_user_id,
+                            t5.tel_phone as inviter_telephone,
+                            t5.email as inviter_email,
+                            t7.ip,t7.area,
+                            (select count(1) from ag_admin_v1.cola_user as t6 where t4.invite_code = t6.inviter) as inviter_number
+        from ag_admin_v1.cola_user_kyc as t1
+                 LEFT JOIN ag_admin_v1.base_user as t2 on t1.user_id = t2.id
+                 left join ag_admin_v1.cola_user as t3 on t1.user_id = t3.sys_user_id
+                 left join ag_admin_v1.cola_user as t4 on t3.inviter = t4.invite_code
+                 left join ag_admin_v1.base_user as t5 on t4.sys_user_id = t5.id
+                 left join ag_admin_v1.cola_login_log as t7 on t1.user_id = t7.user_id
+        where t1.user_id = #{userId}
+    </select>
+</mapper>

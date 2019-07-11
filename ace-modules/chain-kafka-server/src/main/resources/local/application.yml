@@ -1,0 +1,138 @@
+spring:
+    kafka:
+      bootstrap-servers: 112.74.59.207:9092
+      producer:
+        batch-size: 16384
+        buffer-memory: 33554432
+        key-serializer: org.apache.kafka.common.serialization.StringSerializer
+        value-serializer: org.apache.kafka.common.serialization.StringSerializer
+        retries: 1
+        acks: 0
+      consumer:
+        auto-offset-reset: latest
+        enable-auto-commit: false
+        auto-commit-interval: 5000
+        max-poll-records: 1
+        fetch-max-wait: 5000
+        key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      listener:
+        poll-timeout: 5000
+    redis:
+      database: 1
+      host: ${REDIS_HOST:120.79.250.164}
+      port: ${REDIS_PORT:6379}
+      password: ${RESI_PASS:wxpker}
+      max-active: 20
+      jedis:
+        pool:
+          max-idle: 8
+          min-idle: 0
+          max-active: 30
+          max-wait: -1
+      timeout: 5000
+    jackson:
+        date-format: yyyy-MM-dd HH:mm:ss
+        time-zone: GMT+8
+    sleuth:
+      enabled: true
+      http:
+        legacy:
+          enabled: true
+    profiles:
+      active: bitcoin,eth
+    datasource:
+      name: test
+      url: jdbc:postgresql://${PG_HOST:192.168.0.86}:${PG_PORT:5432}/bitcola_chain
+      username: postgres
+      password: bitcola
+      # 使用druid数据源
+      type: com.alibaba.druid.pool.DruidDataSource
+      driver-class-name: org.postgresql.Driver
+      filters: stat
+      maxActive: 20
+      initialSize: 1
+      maxWait: 60000
+      minIdle: 1
+      timeBetweenEvictionRunsMillis: 60000
+      minEvictableIdleTimeMillis: 300000
+      validationQuery: select 'x'
+      testWhileIdle: true
+      testOnBorrow: false
+      testOnReturn: false
+      poolPreparedStatements: true
+      maxOpenPreparedStatements: 20
+
+mybatis:
+    basepackage: com.bitcola.chain.mapper
+    xmlLocation: classpath:mapper/**/*.xml
+    mapper-locations: "classpath*:mapper/*.xml"
+
+server:
+    port: 19908
+sample:
+  zipkin:
+    # When enabled=false, traces log to the console. Comment to send to zipkin
+    enabled: false
+ribbon:
+  eureka:
+    enabled: true
+  ReadTimeout: 100000
+  ConnectTimeout: 100000
+  MaxAutoRetries: 0
+  MaxAutoRetriesNextServer: 1
+  OkToRetryOnAllOperations: false
+
+hystrix:
+  threadpool:
+    default:
+      coreSize: 1000 ##并发执行的最大线程数，默认10
+      maxQueueSize: 1000 ##BlockingQueue的最大队列数
+      queueSizeRejectionThreshold: 500 ##即使maxQueueSize没有达到，达到queueSizeRejectionThreshold该值后，请求也会被拒绝
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 110000
+
+
+#redis-cache 相关
+redis:
+    pool:
+         maxActive: 300
+         maxIdle: 100
+         maxWait: 1000
+    host: ${REDIS_HOST}
+    port:  ${REDIS_PORT}
+    password: ${RESI_PASS}
+    timeout: 2000
+    # 服务或应用名
+    sysName: ace-chat
+    enable: true
+    database: 0
+
+jetcache:
+  statIntervalMinutes: 60
+  areaInCacheName: false
+  local:
+    default:
+      type: linkedhashmap
+      keyConvertor: fastjson
+
+bitcola:
+  chain:
+    dev: true
+    password: DD12138~!@#
+    packageScan: com/bitcola
+    kafka-token: BitColaKafkaPrivateKey
+    # 这两个配置与客户端相反
+    kafka-topic-receive: chain-test-receive
+    kafka-topic-send: chain-test-send
+    # 此项必须写,为空则默认为 IP:port 表示每台机器 group-id 都不一样
+    kafka-group-id:
+
+
+
+
+

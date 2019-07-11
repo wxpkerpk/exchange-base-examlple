@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title> SKR 控制</title>
+    <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/layer/2.3/layer.js"></script>
+    <link href="https://cdn.bootcss.com/layer/2.3/skin/layer.css" rel="stylesheet">
+    <script src="iso.js"></script>
+    <style>
+        table {
+            width: 1390px;
+            font-size: 15px;
+            line-height: 1.2;
+            border-top: 1px solid #a8a8a8;
+            border-left: 1px solid #a8a8a8;
+            text-align: center;
+            margin: 57px auto;
+        }
+
+        table caption {
+            padding: 26px 0;
+            font-size: 26px;
+            line-height: 1;
+            color: #e63b3b;
+        }
+
+        table td, table th {
+            border-right: 1px solid #a8a8a8;
+            border-bottom: 1px solid #a8a8a8;
+            height: 20px;
+        }
+
+        table th {
+            background-color: #eeeeee;
+            padding: 8px 0;
+        }
+
+        table td {
+            font-size: 12px;
+            line-height: 26px;
+            padding: 4px 15px 4px 9px;
+        }
+        .randomForm span{
+            display: inline-block;
+            width: 135px;
+        }
+    </style>
+
+</head>
+<body>
+
+<!--<button id="login">一键全部登录</button>-->
+<div class="randomForm">
+    <span>生成多少随机小单:</span>
+    <input id="randomNumber" placeholder="生成多少随机小单" value="72"/><br/>
+    <!--<input id="randomUserIdMin" placeholder="用户min(209915)" value="213527"/>-->
+    <!--<input id="randomUserIdMax" placeholder="用户max(211100)" value="222526"/>-->
+    <span>金额min(1):</span>
+    <input id="randomAmountMin" placeholder="金额min(1)" value="1"/><br/>
+    <span>金额max(20):</span>
+    <input id="randomAmountMax" placeholder="金额max(20)" value="13"/><br/>
+    <span>间隔min(s):</span>
+    <input id="randomSecMin" placeholder="间隔min(s)" value="100"/><br/>
+    <span>间隔max(s)</span>
+    <input id="randomSecMax" placeholder="间隔max(s)" value="1800"/><br/>
+    <button id="randomSomeRecord">随机生成若干小单刷记录,点我开始</button>
+</div>
+<br/>
+<div>
+    <input id="largeOrder" placeholder="下一个大单"/>
+    <button id="randomLargeOrder">下一个大单</button>
+</div>
+
+<table cellpadding="0" cellspacing="0" border="0">
+    <thead>
+    <tr>
+        <th rowspan="2">用户ID</th>
+        <th rowspan="2">当前排名</th>
+        <th rowspan="2">共振金额</th>
+        <th rowspan="2">奖励</th>
+        <th rowspan="2">手动共振</th>
+        <th colspan="4">自动操作</th>
+    </tr>
+    <tr>
+        <th>总金额</th>
+        <th>间隔时间</th>
+        <th>下单数</th>
+        <th>操作</th>
+    </tr>
+    </thead>
+    <tbody id="dataTable">
+    </tbody>
+</table>
+
+
+</body>
+</html>

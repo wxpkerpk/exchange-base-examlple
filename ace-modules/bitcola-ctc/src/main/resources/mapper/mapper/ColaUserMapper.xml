@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.ctc.mapper.ColaUserMapper">
+
+    <resultMap id="userMap" type="com.bitcola.exchange.ctc.entity.ColaUser">
+        <result column="sys_user_id" property="userId"/>
+        <result column="kyc_status" property="kycStatus"/>
+        <result column="document_number" property="documentNumber"/>
+        <result column="first_name" property="firstName"/>
+        <result column="last_name" property="lastName"/>
+        <result column="money_password" property="pin"/>
+    </resultMap>
+    <select id="getUserInfo" resultMap="userMap">
+        select t1.sys_user_id,
+               t2.kyc_status,
+               t2.document_number,
+               t2.first_name,
+               t2.last_name,
+               t1.money_password
+        from ag_admin_v1.cola_user as t1
+             left join ag_admin_v1.cola_user_kyc as t2 on t1.sys_user_id = t2.user_id
+        where t1.sys_user_id = #{userId}
+    </select>
+</mapper>

@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitcola.exchange.launchpad.mapper.ColaResonanceMapper">
+
+    <resultMap id="unlockLog" type="com.bitcola.exchange.launchpad.entity.ColaResonanceUnlockLog">
+        <result property="id" column="id"/>
+        <result property="coinCode" column="coin_code"/>
+        <result property="number" column="number"/>
+        <result property="type" column="type"/>
+        <result property="userId" column="user_id"/>
+        <result property="userStage" column="user_stage"/>
+        <result property="inviterStage" column="inviter_stage"/>
+        <result property="timestamp" column="timestamp"/>
+    </resultMap>
+
+
+    <select id="countNumber" resultType="java.math.BigDecimal">
+        select coalesce(sum(number),0) from ag_admin_v1.cola_launchpad_resonance where coin_code = #{coinCode}
+    </select>
+    <select id="capitalPool" resultType="java.math.BigDecimal">
+        select coalesce(sum(amount),0) from ag_admin_v1.cola_launchpad_resonance where coin_code = #{coinCode}
+    </select>
+    <select id="capitalPoolByWeek" resultType="java.math.BigDecimal">
+        select coalesce(sum(amount),0) from ag_admin_v1.cola_launchpad_resonance where coin_code = #{coinCode} and timestamp > #{startTime}
+    </select>
+
+    <select id="rank" resultType="com.bitcola.exchange.launchpad.vo.ColaResonanceRankResponse">
+        select user_id as userId,sum(amount) as number,symbol
+        from ag_admin_v1.cola_launchpad_resonance
+        where timestamp > #{startTime}
+        group by user_id,symbol order by sum(amount) desc limit #{limit}
+    </select>
+    <select id="selfRank" resultType="com.bitcola.exchange.launchpad.vo.ColaResonanceRankResponse">
+        with rank as (
+                select t.user_id ,sum(amount) as number,row_number() OVER( order by sum(amount) desc) as index,symbol
+                from ag_admin_v1.cola_launchpad_resonance as t where t.coin_code = #{coinCode}  group by user_id,symbol)
+        select index,number,user_id as userId,symbol from rank where user_id = #{userId}
+    </select>
+
+    <select id="last" resultType="com.bitcola.exchange.launchpad.vo.ColaResonanceLastResponse">
+        select user_id as userId,amount as number,timestamp,symbol from ag_admin_v1.cola_launchpad_resonance where coin_code = #{coinCode} order by timestamp desc limit #{limit}
+    </select>
+
+    <select id="getDepositAddress" resultType="java.lang.String">
+        select address_in from ag_admin_v1.cola_me_balance
+          where user_id = #{userId} and coin_code = #{symbol}
+    </select>
+    <select id="getUserPin" resultType="java.lang.String">
+        select money_password from ag_admin_v1.cola_user where sys_user_id = #{userId}
+    </select>
+
+    <update id="frozenBalance">
+        update ag_admin_v1.cola_me_balance set balance_frozen = balance_frozen+#{amount} , balance_available = balance_available-#{amount}
+                , sign = ag_admin_v1.makesign(id,balance_available-#{amount},balance_frozen+#{amount},#{key})
+        where id = #{id} and balance_available-#{amount} >= 0
+          and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{key}) = true
+    </update>
+
+    <update id="subFrozenAndBack">
+        update ag_admin_v1.cola_me_balance set balance_frozen = balance_frozen-#{totalAmount} , balance_available = balance_available+#{remainAmount}
+                , sign = ag_admin_v1.makesign(id,balance_available+#{remainAmount},balance_frozen-#{totalAmount},#{key})
+        where id = #{id} and balance_frozen-#{totalAmount} >= 0
+          and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{key}) = true
+    </update>
+
+    <update id="addCoinCode">
+        update ag_admin_v1.cola_me_balance set balance_available = balance_available+#{totalNumber}
+                , sign = ag_admin_v1.makesign(id,balance_available+#{totalNumber},balance_frozen,#{key})
+        where id = #{id}
+          and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{key}) = true
+    </update>
+
+    <insert id="record">
+        insert into  ag_admin_v1.cola_launchpad_resonance
+        (id, user_id, price, number, amount, timestamp, coin_code, symbol,round,stage)
+        values
+        <foreach collection ="list" item="record" index= "index" separator =",">
+            (
+            #{record.id}, #{record.userId},
+            #{record.price},  #{record.number},
+            #{record.amount},  #{record.timestamp},
+            #{record.coinCode}, #{record.symbol},
+            #{record.round}, #{record.stage}
+            )
+        </foreach>
+    </insert>
+
+    <select id="selectBalanceNumberById" resultType="java.math.BigDecimal">
+        select lock from ag_admin_v1.cola_launchpad_resonance_balance_lock where id = #{id}
+    </select>
+
+    <insert id="insertLockCoin">
+        insert into ag_admin_v1.cola_launchpad_resonance_balance_lock (id,unlock,lock,coin_code,user_id) values (#{id},0,#{number},#{coinCode},#{userId})
+    </insert>
+
+    <update id="updateLockCoin">
+        update ag_admin_v1.cola_launchpad_resonance_balance_lock set lock = #{number} where id = #{id}
+    </update>
+
+    <update id="subLockNumber">
+        update ag_admin_v1.cola_launchpad_resonance_balance_lock
+        set unlock = unlock+#{number},
+            lock = lock - #{number}
+        where id = #{id} and lock - #{number} >= 0
+    </update>
+
+    <select id="getInviterUserId" resultType="java.lang.String">
+        select t2.sys_user_id from ag_admin_v1.cola_user as t1
+       inner join ag_admin_v1.cola_user as t2 on t1.inviter = t2.invite_code where t1.sys_user_id = #{userId}
+    </select>
+
+
+
+    <insert id="batchInsertUnlockLog">
+        insert into  ag_admin_v1.cola_launchpad_resonance_unlock_log
+        (id, coin_code, number, type, user_id, user_stage, inviter_stage,timestamp)
+        values
+        <foreach collection ="list" item="record" index= "index" separator =",">
+            (
+            #{record.id}, #{record.coinCode},
+            #{record.number},  #{record.type},
+            #{record.userId},  #{record.userStage},
+            #{record.inviterStage},#{record.timestamp}
+            )
+        </foreach>
+    </insert>
+
+
+    <select id="getUserBalance" resultType="java.math.BigDecimal">
+        select balance_available from ag_admin_v1.cola_me_balance where user_id = #{userId} and coin_code = #{coinCode}
+    </select>
+
+    <select id="getLockNumber" resultType="java.util.Map">
+        select lock,unlock from ag_admin_v1.cola_launchpad_resonance_balance_lock where id = #{id}
+    </select>
+
+    <select id="getUnlockDetail" resultMap="unlockLog">
+        select * from ag_admin_v1.cola_launchpad_resonance_unlock_log where user_id = #{userId} and coin_code = #{coinCode} order by timestamp desc
+    </select>
+
+    <select id="getTotalNumberAndAmount"  resultType="java.util.Map">
+        select sum(number) as number,sum(amount) as amount from ag_admin_v1.cola_launchpad_resonance where user_id = #{userId}
+    </select>
+
+    <select id="getUsersLockNumber" resultType="java.util.Map">
+        select id,lock,unlock,user_id as user from ag_admin_v1.cola_launchpad_resonance_balance_lock where lock > 0 and coin_code = #{coinCode}
+    </select>
+
+    <select id="selectKycStatus" resultType="java.lang.Integer">
+        select kyc_status from ag_admin_v1.cola_user_kyc where user_id = #{userId}
+    </select>
+
+    <select id="resonanceList" resultType="com.bitcola.exchange.launchpad.vo.ResponseProjectListVo">
+        select coin_code as coinCode,symbol,title,title_image as titleImage,introduction,start_time as startTime,end_time as endTime from ag_admin_v1.cola_launchpad_resonance_project
+    </select>
+
+    <select id="getProjectStartTime" resultType="java.lang.Long">
+        select start_time from ag_admin_v1.cola_launchpad_resonance_project where coin_code = #{coinCode}
+    </select>
+    <select id="getProjectEndTime" resultType="java.lang.Long">
+        select end_time from ag_admin_v1.cola_launchpad_resonance_project where coin_code = #{coinCode}
+    </select>
+
+
+</mapper>

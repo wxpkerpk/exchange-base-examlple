@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitcola.exchange.security.me.mapper.ColaUserClientConfigMapper">
+
+    <select id="get" resultType="java.lang.String">
+        select ${field} from ag_admin_v1.cola_user_client_config where user_id = #{userId}
+    </select>
+
+    <update id="set">
+        update ag_admin_v1.cola_user_client_config set ${field} = #{config} where user_id = #{userId}
+    </update>
+
+    <insert id="insert">
+        insert into ag_admin_v1.cola_user_client_config (user_id) values (#{userId})
+    </insert>
+
+
+</mapper>

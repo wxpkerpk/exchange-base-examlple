@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.security.me.mapper.ColaNewCoinApplyMapper">
+
+	<insert id="apply">
+        INSERT INTO "ag_admin_v1"."cola_new_coin_apply"("id", "user_id", "status", "description", "company_name", "company_registered_address", "company_register_date", "leader", "telephone", "email", "team_size", "team_info", "project_name", "project_website", "white_paper", "stage", "project_info", "project_alpha", "coin_name", "coin_code", "coin_block_chain_type", "coin_liquidity_info", "coin_features", "coin_rule", "coin_plan", "private_placement_info", "public_placement_info", "online_exchanges", "pre_online_exchanges", "community_info", "community_in_bitcola", "media_coverage", "cooperation_plan", "maintain_info", "promotion_info") VALUES (#{id}, #{userId}, 'pending', '', #{companyName}, #{companyRegisteredAddress}, #{companyRegisterDate}, #{leader}, #{telephone}, #{email}, #{teamSize}, #{teamInfo}, #{projectName}, #{projectWebsite}, #{whitePaper}, #{stage}, #{projectAlpha}, #{projectInfo}, #{coinName}, #{coinCode}, #{coinBlockChainType}, #{coinLiquidityInfo}, #{coinFeatures}, #{coinRule}, #{coinPlan}, #{privatePlacementInfo}, #{publicPlacementInfo}, #{onlineExchanges}, #{preOnlineExchanges}, #{communityInfo}, #{communityInBitCola}, #{mediaCoverage}, #{cooperationPlan}, #{maintainInfo}, #{promotionInfo});
+    </insert>
+
+    <select id="applyItem" resultType="java.util.Map">
+        select * from ag_admin_v1.cola_new_coin_apply where user_id = #{userId} and status = 'pending'
+    </select>
+
+</mapper>

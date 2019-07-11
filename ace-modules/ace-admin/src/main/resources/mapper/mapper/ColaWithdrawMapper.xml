@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.security.admin.mapper.ColaWithdrawMapper">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.bitcola.me.entity.ColaMeBalanceWithdrawin" id="colaMeBalanceWithdrawinMap">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="coinCode" column="coin_code"/>
+        <result property="number" column="number"/>
+        <result property="realNumber" column="real_number"/>
+        <result property="type" column="type"/>
+        <result property="address" column="address"/>
+        <result property="note" column="note"/>
+        <result property="status" column="status"/>
+        <result property="date" column="date"/>
+        <result property="txId" column="tx_id"/>
+        <result property="fees" column="fees"/>
+        <result property="confirmations" column="confirmations"/>
+        <result property="confirmationNumber" column="confirmation_number"/>
+        <result property="icon" column="icon"/>
+        <result property="reason" column="reason"/>
+        <result property="auditReason" column="audit_reason"/>
+    </resultMap>
+
+    <select id="list" resultMap="colaMeBalanceWithdrawinMap">
+        select * from ag_admin_v1.cola_me_balance_withdrawin
+        <where>
+            <if test="status!=null and status!=''">
+                and status = #{status}
+            </if>
+            <if test="type!=null and type!=''">
+                and type = #{type}
+            </if>
+            <if test="userId!=null and userId!=''">
+                and user_id = #{userId}
+            </if>
+            <if test="coinCode!=null and coinCode!=''">
+                and coin_code = #{coinCode}
+            </if>
+            <if test="txId!=null and txId!=''">
+                and tx_id = #{txId}
+            </if>
+        </where>
+        order by status asc,date desc limit #{limit} OFFSET #{offset}
+    </select>
+    <select id="total" resultType="java.lang.Long">
+        select count(1) from ag_admin_v1.cola_me_balance_withdrawin
+        <where>
+            <if test="status!=null and status!=''">
+                and status = #{status}
+            </if>
+            <if test="type!=null and type!=''">
+                and type = #{type}
+            </if>
+            <if test="coinCode!=null and coinCode!=''">
+                and coin_code = #{coinCode}
+            </if>
+            <if test="userId!=null and userId!=''">
+                and user_id = #{userId}
+            </if>
+            <if test="txId!=null and txId!=''">
+                and tx_id = #{txId}
+            </if>
+        </where>
+    </select>
+
+    <select id="item" resultType="java.util.Map">
+        SELECT t1.id,t1.user_id,t1.coin_code,t1."number",t1."date",t1.address,t1.status,t1.note as memo,t1.type,
+               t2.username,t2.area_code,t2.tel_phone,t2.email,t3.nick_name,COALESCE(t4.kyc_status,-1) as kyc
+        FROM
+             ag_admin_v1.cola_me_balance_withdrawin AS t1
+                 LEFT JOIN ag_admin_v1.base_user AS t2 ON t1.user_id = t2.
+                     ID LEFT JOIN ag_admin_v1.cola_user AS t3 ON t1.user_id = t3.sys_user_id
+                 LEFT JOIN ag_admin_v1.cola_user_kyc AS t4 ON t1.user_id = t4.user_id
+        where t1.id = #{id}
+    </select>
+
+    <select id="inOut" resultType="java.util.Map">
+        select coin_code,type,sum(number) as total
+        from ag_admin_v1.cola_me_balance_withdrawin where user_id = #{userId}  group by coin_code,type
+    </select>
+
+    <update id="withdrawRefuse">
+        update ag_admin_v1.cola_me_balance_withdrawin set reason = #{reason} ,status = 'Refuse'
+        ,sign = md5(#{key}||id||user_id||'Refuse'||FLOOR(number))
+        where id = #{orderId}
+    </update>
+
+    <select id="withdrawNumber" resultType="java.math.BigDecimal">
+        select number from ag_admin_v1.cola_me_balance_withdrawin where id = #{orderId}
+    </select>
+
+    <select id="withdrawCoinCode" resultType="java.lang.String">
+        select coin_code from ag_admin_v1.cola_me_balance_withdrawin where id = #{orderId}
+    </select>
+
+    <update id="updateStatus">
+        update ag_admin_v1.cola_me_balance_withdrawin set status = #{status}  ,reason = #{reason},
+                          sign = md5(#{key}||id||user_id||#{status}||FLOOR(number))
+        where id = #{orderId} and sign = md5(#{key}||id||user_id||status||FLOOR(number))
+    </update>
+    <select id="orderWithdrawInfo" resultType="java.util.Map">
+        select user_id,status from ag_admin_v1.cola_me_balance_withdrawin where id = #{orderId}
+    </select>
+
+    <update id="updateWithdrawStatus">
+        update ag_admin_v1.cola_me_balance_withdrawin set tx_id = #{hash},status = 'Completed' where id = #{id}
+    </update>
+
+    <update id="updateWithdrawUserBalance">
+        update ag_admin_v1.cola_me_balance set balance_frozen = balance_frozen-#{number}
+                , sign = ag_admin_v1.makesign(id,balance_available,balance_frozen-#{number},#{key})
+        where id = #{id} and balance_frozen-#{number} >= 0
+          and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{key}) = true
+    </update>
+
+</mapper>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.dataservice.mapper.ColaCoinSymbolMapper">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.bitcola.me.entity.ColaCoinSymbol" id="colaCoinSymbolMap">
+        <result property="id" column="id"/>
+        <result property="coinCode" column="coin_code"/>
+        <result property="symbol" column="symbol"/>
+        <result property="fees" column="fees"/>
+        <result property="icon" column="icon"/>
+        <result property="sort" column="sort"/>
+        <result property="onlineTime" column="online_time"/>
+        <result property="amountScale" column="amount_scale"/>
+        <result property="priceScale" column="price_scale"/>
+        <result property="min" column="min"/>
+        <result property="max" column="max"/>
+    </resultMap>
+
+    <resultMap type="com.bitcola.me.entity.ColaCoinUserchoose" id="colaCoinUserchooseMap">
+        <result property="id" column="ID"/>
+        <result property="symbol" column="symbol"/>
+        <result property="coinCode" column="coin_code"/>
+        <result property="userId" column="user_id"/>
+    </resultMap>
+
+    <resultMap type="com.bitcola.me.entity.ColaUserChooseVo" id="colaCoinUserchooseVoMap">
+        <result property="symbol" column="symbol"/>
+        <result property="coinCode" column="coinCode"/>
+        <result property="icon" column="icon"/>
+        <result property="sort" column="sort"/>
+    </resultMap>
+    <select id="getSymbol" resultMap="colaCoinSymbolMap">
+        select *
+        from ag_admin_v1."cola_coin_symbol"
+        where symbol = #{symbol}
+          and coin_code = #{code}
+    </select>
+    <!--获得当前交易对-->
+    <select id="getCoinSymbolBySymbol" resultType="com.bitcola.me.entity.ColaUserChooseVo">
+        select s."id", s."coin_code" as coinCode, s."symbol", s."fees", c."icon", s."sort"
+        from ag_admin_v1."cola_coin_symbol" s
+                 inner join ag_admin_v1."cola_coin" c on s."coin_code" = c."coin_code"
+        where s."symbol" = #{symbol}
+        order by s.sort
+    </select>
+
+    <select id="list" resultMap="colaCoinUserchooseVoMap">
+        select choose."symbol" symbol, choose."coin_code" coincode, c."icon" icon, c."sort" sort
+        from ag_admin_v1."cola_coin_userchoose" choose
+                 inner join ag_admin_v1."cola_coin" c on choose."coin_code" = c."coin_code"
+        where choose."user_id" = #{userid}
+    </select>
+
+    <select id="getSymbols" resultType="java.lang.String">
+        select name from ag_admin_v1.cola_symbol order by index
+    </select>
+
+</mapper>

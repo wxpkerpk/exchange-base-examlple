@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitcola.dataservice.mapper.ColaUserMapper">
+
+
+    <resultMap id="user" type="com.bitcola.me.entity.ColaUserEntity">
+        <result column="sys_user_id" jdbcType="VARCHAR" property="sysUserID" />
+        <result column="invite_code" jdbcType="VARCHAR" property="inviteCode" />
+        <result column="area_code" jdbcType="VARCHAR" property="areaCode" />
+        <result column="tel_phone" jdbcType="VARCHAR" property="telPhone" />
+        <result column="username" jdbcType="VARCHAR" property="username" />
+        <result column="email" jdbcType="VARCHAR" property="email" />
+        <result column="password" jdbcType="VARCHAR" property="password" />
+        <result column="money_password" jdbcType="VARCHAR" property="moneyPassword" />
+        <result column="inviter" jdbcType="VARCHAR" property="inviter" />
+        <result column="enable" jdbcType="INTEGER" property="enable" />
+        <result column="withdraw_time" jdbcType="INTEGER" property="withdrawTime" />
+        <result column="nick_name" jdbcType="VARCHAR" property="nickName" />
+        <result property="avatar" jdbcType="VARCHAR" column="avatar"/>
+        <result property="sign" jdbcType="VARCHAR" column="sign"/>
+        <result property="language" jdbcType="VARCHAR" column="language"/>
+        <result property="antiPhishingCode" jdbcType="VARCHAR" column="anti_phishing_code"/>
+    </resultMap>
+
+
+    <select id="infoByInviterCode" resultMap="user">
+        select t1.*,t2.tel_phone,t2.email,t2.password,t2.username
+        from ag_admin_v1."cola_user" as t1,ag_admin_v1.base_user as t2
+        where t1."sys_user_id" = t2."id" and t1.invite_code = #{inviterCode}
+    </select>
+
+
+    <select id="getMoneyPassword"  resultType="String">
+        select "money_password" from ag_admin_v1."cola_user" where "sys_user_id" = #{id}
+    </select>
+
+
+    <!--用户信息-->
+    <select id="info" resultMap="user">
+        select t1.*,t2.tel_phone,t2.email,t2.password,t2.username,t2.area_code
+        from ag_admin_v1."cola_user" as t1,ag_admin_v1.base_user as t2
+        where t1."sys_user_id" = t2."id" and t2."id" = #{userid}
+    </select>
+
+    <select id="infoByIds" resultMap="user">
+        select t1.*,t2.tel_phone,t2.email,t2.password,t2.username
+        from ag_admin_v1."cola_user" as t1,ag_admin_v1.base_user as t2
+        where t1."sys_user_id" = t2."id" and t2."id" in
+        <foreach collection="userId" index="index" item="item" open="(" separator="," close=")">
+             #{item}
+        </foreach>
+    </select>
+
+    <select id="getUserKycInfo" resultType="com.bitcola.me.entity.ColaUserKyc">
+        select user_id as userId,kyc_status as kycStatus,first_name as firstName,last_name as lastName,document_number as documentNumber,front_side as frontSide,back_side as backSide,document_type as documentType
+        ,document_and_face as documentAndFace,timestamp,reason,area_code as areaCode,telephone,email
+        from ag_admin_v1.cola_user_kyc where user_id = #{userId}
+    </select>
+
+</mapper>

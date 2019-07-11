@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+
+    <script>
+        var baseUrl = 'http://192.168.0.117:9527/api/me/';
+        $(function () {
+            $('#register').click(function () {
+                $.ajax({
+                    method:'POST',
+                    url: baseUrl + 'colaUser/resetPassword',
+                    data: {
+                        type:'email',
+                        email: 'abc'
+                    },
+                    xhrFields: {
+                        withCredentials: true
+                    },
+                    crossDomain: true,
+                    contentType: 'application/json',
+                    success: function (data) {
+                        console.log(data);
+                    }
+                })
+            })
+        })
+
+    </script>
+
+</head>
+<body>
+<button id="register">注册账号</button>
+
+</body>
+</html>

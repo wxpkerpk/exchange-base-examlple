@@ -1,0 +1,184 @@
+server:
+  port: 8765
+
+
+ribbon.ReadTimeout: 120000
+#请求连接的超时时间
+ribbon.ConnectTimeout: 30000
+
+eureka:
+    instance:
+        statusPageUrlPath: /actuator/info
+        healthCheckUrlPath: /actuator/health
+        home-page-url-path: /
+        # docker 部署开启
+#        prefer-ip-address: true
+        ip-address: localhost
+    client:
+        serviceUrl:
+#            defaultZone: http://localhost:8761/eureka/
+                    # docker 部署开启
+            defaultZone: http://${EUREKA_HOST:localhost}:${EUREKA_PORT:8761}/eureka/
+
+#请求和响应GZIP压缩支持
+feign:
+  httpclient:
+    enabled: false
+  okhttp:
+    enabled: true
+  compression:
+    request:
+      enabled: true
+      mime-types: text/xml,application/xml,application/json
+      min-request-size: 2048
+    response:
+      enabled: true
+
+spring:
+  application:
+      name: ace-gateway-v2
+  redis:
+      database: 1
+      host: 120.79.250.164
+      jedis:
+        pool:
+            max-active: 20
+      password: wxpker
+  rabbitmq:
+      host: ${RABBIT_MQ_HOST:120.79.250.164}
+      port:  ${RABBIT_MQ_PORT:5672}
+      username: guest
+      password: guest
+  sleuth:
+    enabled: true
+    http:
+      legacy:
+        enabled: true
+  cloud:
+    gateway:
+      locator:
+        enabled: true
+      routes:
+      # =====================================
+      - id: websocket
+        uri: lb:ws://bitcola-exchange
+        predicates:
+        - Path=/webSocket/v2
+      - id: websocket
+        uri: lb://bitcola-exchange
+        predicates:
+        - Path=/webSocket/v2
+      - id: ace-auth
+        uri: lb://ace-auth
+        order: 8000
+        predicates:
+        - Path=/api/auth/**
+        filters:
+        - StripPrefix=2
+      - id: ace-admin
+        uri: lb://ace-admin
+        order: 8001
+        predicates:
+        - Path=/api/admin/**
+        filters:
+        - StripPrefix=2
+      - id: ace-me
+        uri: lb://ace-me
+        order: 8002
+        predicates:
+        - Path=/api/me/**
+        filters:
+        - StripPrefix=2
+      - id: ace-community
+        uri: lb://ace-community
+        order: 8008
+        predicates:
+        - Path=/api/community/**
+        filters:
+        - StripPrefix=2
+      - id: bitcola-activity
+        uri: lb://bitcola-activity
+        order: 8018
+        predicates:
+        - Path=/api/activity/**
+        filters:
+        - StripPrefix=2
+      - id: bitcola-push
+        uri: lb://bitcola-push
+        order: 8006
+        predicates:
+        - Path=/api/push/**
+        filters:
+        - StripPrefix=2
+      - id: bitcola-exchange
+        uri: lb://bitcola-exchange
+        order: 8009
+        predicates:
+        - Path=/api/v2/**
+        filters:
+        - StripPrefix=2
+      - id: bitcola-launchpad
+        uri: lb://bitcola-launchpad
+        order: 8010
+        predicates:
+        - Path=/api/launchpad/**
+        filters:
+        - StripPrefix=2
+      - id: bitcola-ctc
+        uri: lb://bitcola-ctc
+        order: 8011
+        predicates:
+        - Path=/api/c2c/**
+        filters:
+        - StripPrefix=2
+
+
+logging:
+  level:
+    com.bitcola.exchange.security.gate.v2: info
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  security:
+    enabled: false
+
+
+gate:
+  ignore:
+    startWith: /auth/jwt,/exchange,/me,/chat,/community,/activity,/bullet,/admin/login,/push,/v2,/launchpad,/c2c
+
+
+auth:
+  serviceId: ace-auth
+  user:
+    token-header: Authorization
+  client:
+    token-header: x-client-token
+    id: ace-gate  #不填则默认读取spring.application.name
+    secret: 12345678
+
+
+jetcache:
+  statIntervalMinutes: 15
+  areaInCacheName: false
+  local:
+    default:
+      type: linkedhashmap
+      keyConvertor: fastjson
+      limit: 100
+  remote:
+    default:
+      type: redis
+      keyConvertor: fastjson
+      valueEncoder: java
+      valueDecoder: java
+      poolConfig:
+        minIdle: 5
+        maxIdle: 20
+        maxTotal: 50
+      host: 120.79.250.164
+      port: 6379
+      password: wxpker

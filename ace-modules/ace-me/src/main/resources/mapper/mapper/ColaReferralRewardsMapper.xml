@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitcola.exchange.security.me.mapper.ColaReferralRewardsMapper">
+
+    <select id="getReferralCode" resultType="java.lang.String">
+        select invite_code from ag_admin_v1.cola_user where sys_user_id = #{userID}
+    </select>
+
+    <select id="countInviteFriends" resultType="java.lang.Long">
+        select count(1) from ag_admin_v1.cola_user where inviter = #{invitationCode}
+    </select>
+
+    <select id="listInviteFriends" resultType="com.bitcola.exchange.security.me.vo.InvitationVo">
+        select u.sys_user_id as userId,bu.username,u.time
+        from ag_admin_v1.cola_user as u,ag_admin_v1.base_user as bu
+        where u.inviter = #{invitationCode}
+          and u.sys_user_id = bu.id
+        order by u.time desc limit #{limit} OFFSET (#{limit}*(#{page}-1))
+    </select>
+
+    <select id="referralRewards" resultType="java.util.Map">
+        select coin_code as coin,sum(count) as amount from ag_admin_v1.reward_log
+        where user_id = #{userID}
+        group by coin_code
+    </select>
+
+</mapper>

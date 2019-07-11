@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.dataservice.mapper.ColaChainMapper">
+
+    <resultMap id="chainOrderMap" type="com.bitcola.exchange.security.common.msg.ColaChainOrder">
+        <result property="orderId" column="id"/>
+        <result property="coinCode" column="coin_code"/>
+        <result property="address" column="address"/>
+        <result property="memo" column="note"/>
+        <result property="number" column="real_number"/>
+    </resultMap>
+    <resultMap id="withdrawOrderMap" type="com.bitcola.dataservice.dto.WithdrawDto">
+        <result column="coin_code" property="coinCode"/>
+        <result column="id" property="orderId"/>
+        <result column="address" property="address"/>
+        <result column="note" property="memo"/>
+        <result column="real_number" property="realNumber"/>
+        <result column="number" property="number"/>
+        <result column="belong" property="coinBelong"/>
+        <result column="user_id" property="userId"/>
+        <result column="tel_phone" property="userTelephone"/>
+        <result column="area_code" property="userAreaCode"/>
+        <result column="email" property="userEmail"/>
+        <result column="fees" property="fee"/>
+        <result column="anti_phishing_code" property="antiPhishingCode"/>
+        <result column="language" property="language"/>
+    </resultMap>
+
+
+    <select id="getOne" resultType="java.util.Map">
+        select * from ag_admin_v1.cola_me_balance_withdrawin where tx_id = #{txId} and type = 'Deposit'
+    </select>
+    <select id="info" resultType="java.util.Map">
+        select t1.user_id as u,t2.confirmation_number as n,t1.address_in as address ,t2.icon
+        from ag_admin_v1.cola_me_balance as t1
+        left join ag_admin_v1.cola_coin as t2 on t1.coin_code = t2.coin_code
+        where t1.coin_code = #{coinCode}
+        and (t1.address_in = #{to}
+                <if test="from !=null and from != ''">
+                  or t1.address_in = #{from}
+                </if>
+            )
+        <if test="memo !=null and memo != ''">
+            and t1.note = #{memo}
+        </if>
+    </select>
+
+    <insert id="newRecord" parameterType="com.bitcola.me.entity.ColaMeBalanceWithdrawin">
+        INSERT INTO ag_admin_v1.cola_me_balance_withdrawin
+                ( "id", "user_id", "coin_code", "number", "type", "address",  "status", "date",
+                   "tx_id", "confirmations", "confirmation_number", "icon" )
+        select DISTINCT #{id}, #{userId}, #{coinCode},#{number}, #{type}, #{address}, #{status},#{date}
+                 , #{txId},  #{confirmations}, #{confirmationNumber}, #{icon} from ag_admin_v1.cola_me_balance_withdrawin
+        where not exists(select id from ag_admin_v1.cola_me_balance_withdrawin where tx_id = #{txId} and type = 'Deposit')
+    </insert>
+
+    <update id="completeDeposit">
+        update ag_admin_v1.cola_me_balance set balance_available = balance_available+#{number}
+                , sign = ag_admin_v1.makesign(id,balance_available+#{number},balance_frozen,#{key})
+        where user_id = #{userId} and coin_code = #{coinCode}
+          and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{key}) = true
+    </update>
+
+    <update id="confirmNumber">
+        update ag_admin_v1.cola_me_balance_withdrawin set confirmations = #{currentConfirmNumber} where id = #{orderId}
+    </update>
+
+    <select id="selectById" resultType="java.util.Map">
+        select * from ag_admin_v1.cola_me_balance_withdrawin where id = #{orderId}
+    </select>
+
+    <update id="completeDepositStatus">
+        update ag_admin_v1.cola_me_balance_withdrawin
+        set status = 'Completed',confirmations = confirmation_number
+        where id = #{orderId} and status = 'Pending'
+    </update>
+
+    <select id="getScanAddress" resultType="java.lang.String">
+        select address_in from ag_admin_v1.cola_me_balance  as t1
+        left join ag_admin_v1.cola_coin as t2 on t1.coin_code = t2.coin_code
+        where t2.belong = #{module} and t1.address_in is not null and t1.address_in &lt;> ''
+        GROUP BY t1.address_in
+    </select>
+
+    <select id="getExportedOrder" resultMap="chainOrderMap">
+        select t1.id as id,t1.coin_code,t1.address,t1.note,t1.real_number from ag_admin_v1.cola_me_balance_withdrawin as t1
+        left join ag_admin_v1.cola_coin as t2 on t1.coin_code = t2.coin_code
+        where t2.belong = #{belong} and t1.status = 'Exported'
+    </select>
+
+    <select id="getWithdrawOrder" resultMap="withdrawOrderMap">
+        select t1.id as id,t1.coin_code,t1.address,t1.note,t2.belong,t1.real_number,t1.number,
+               t1.user_id,t3.area_code,t3.tel_phone,t3.email,t1.fees,t4.anti_phishing_code,t4.language
+        from ag_admin_v1.cola_me_balance_withdrawin as t1
+                 left join ag_admin_v1.cola_coin as t2 on t1.coin_code = t2.coin_code
+                 left join ag_admin_v1.base_user as t3 on t1.user_id = t3.id
+                 left join ag_admin_v1.cola_user as t4 on t4.sys_user_id = t1.user_id
+        where t1.id = #{orderId}
+    </select>
+
+    <update id="withdrawFailed">
+        update ag_admin_v1.cola_me_balance_withdrawin
+        set status = 'Failed', sign = md5(#{key}||id||user_id||'Failed'||FLOOR(number)),
+            audit_reason = #{reason}
+        where id = #{orderId} and sign = md5(#{key}||id||user_id||status||FLOOR(number))
+    </update>
+
+    <update id="withdrawRollback">
+        update ag_admin_v1.cola_me_balance set balance_frozen = balance_frozen-#{number},balance_available = balance_available+#{number}
+                , sign = ag_admin_v1.makesign(id,balance_available+#{number},balance_frozen-#{number},#{key})
+        where user_id = #{userId} and coin_code = #{coinCode} and balance_frozen-#{number} >= 0
+          and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{key}) = true
+    </update>
+
+    <update id="withdrawSuccess">
+        update ag_admin_v1.cola_me_balance_withdrawin set status = 'Completed' , tx_id = #{hash} ,
+                                      sign = md5(#{key}||id||user_id||'Completed'||FLOOR(number))
+        where id = #{orderId} and sign = md5(#{key}||id||user_id||status||FLOOR(number))
+    </update>
+
+    <update id="withdrawSuccessUnFrozen">
+        update ag_admin_v1.cola_me_balance set balance_frozen = balance_frozen-#{number}
+                , sign = ag_admin_v1.makesign(id,balance_available,balance_frozen-#{number},#{key})
+        where user_id = #{userId} and coin_code = #{coinCode} and balance_frozen-#{number} >= 0
+          and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{key}) = true
+    </update>
+</mapper>

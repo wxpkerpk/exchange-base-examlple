@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.security.me.mapper.OssMapper">
+
+   <update id="updateCoinOss">
+       update ag_admin_v1.cola_coin set icon = #{img} where id = #{id}
+   </update>
+   <update id="updateUserOss">
+       update ag_admin_v1.cola_user set avatar = #{img} where sys_user_id = #{id}
+   </update>
+   <update id="updateKycOss">
+       update ag_admin_v1.cola_user_kyc set front_side = #{a},back_side = #{b},document_and_face = #{c} where user_id = #{id}
+   </update>
+
+</mapper>

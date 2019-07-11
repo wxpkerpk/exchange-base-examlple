@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.security.me.mapper.ColaMeFeedbackMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.bitcola.me.entity.ColaMeFeedback" id="colaMeFeedbackMap">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="content" column="content"/>
+        <result property="images" column="images"/>
+        <result property="contact" column="contact"/>
+        <result property="date" column="date"/>
+    </resultMap>
+
+
+    <!--意见反馈列表-->
+    <select id="list" resultMap="colaMeFeedbackMap">
+        select * from ag_admin_v1."cola_me_feedback" where "user_id" = #{userid}
+    </select>
+
+
+</mapper>

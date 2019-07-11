@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.security.admin.mapper.ColaCtcOrderMapper">
+
+    <resultMap id="orderMap" type="com.bitcola.ctc.ColaCtcOrder">
+        <result column="id" property="id"/>
+        <result column="direction" property="direction"/>
+        <result column="timestamp" property="timestamp"/>
+        <result column="coinCode" property="coin_code"/>
+        <result column="customer_user_id" property="customerUserId"/>
+        <result column="price" property="price"/>
+        <result column="number" property="number"/>
+        <result column="status" property="status"/>
+        <result column="from_card_id" property="fromCardId"/>
+        <result column="to_card_id" property="toCardId"/>
+        <result column="auditor" property="auditor"/>
+        <result column="audit_status" property="auditStatus"/>
+        <result column="confirm_user_id" property="confirmUserId"/>
+        <result column="audit_timestamp" property="auditTimestamp"/>
+        <result column="confirm_timestamp" property="confirmTimestamp"/>
+    </resultMap>
+    <select id="list" resultMap="orderMap">
+        select * from ag_admin_v1.cola_ctc_order
+        where 1=1
+        <if test="customerUserId != null and customerUserId != ''">
+            and customer_user_id = #{customerUserId}
+        </if>
+        <if test="auditStatus == 'AUDIT_NOT_PROCESSED'">
+            and audit_status = #{auditStatus}
+            and auditor is null
+        </if>
+        <if test="auditStatus == 'AUDIT_PROCESSING'">
+            and audit_status = #{auditStatus}
+            and auditor = #{userId}
+        </if>
+        <if test="auditStatus == 'AUDIT_PROCESSED'">
+            and audit_status = #{auditStatus}
+            and confirm_user_id is null
+        </if>
+        <if test="auditStatus == 'AUDIT_CONFIRM'">
+            and audit_status = #{auditStatus}
+            and confirm_user_id = #{userId}
+        </if>
+        <if test="auditStatus == 'FAILURE'">
+            and audit_status = #{auditStatus}
+        </if>
+        <if test="direction != null and direction != ''">
+            and direction = #{direction}
+        </if>
+        <if test="status != null and status != ''">
+            and status = #{status}
+        </if>
+        <if test="startTime != null and startTime != 0">
+            and timestamp > #{startTime}
+        </if>
+        <if test="endTime != null and endTime != 0">
+            and timestamp &lt; #{endTime}
+        </if>
+        <if test="auditor != null and auditor != ''">
+            and auditor = #{auditor}
+        </if>
+        <if test="fromCardId != null and fromCardId != ''">
+            and from_card_id = #{fromCardId}
+        </if>
+        <if test="toCardId != null and toCardId != ''">
+            and to_card_id = #{toCardId}
+        </if>
+        order by timestamp desc limit #{limit} offset #{offset}
+    </select>
+    <select id="count" resultType="java.lang.Long">
+        select count(1) from ag_admin_v1.cola_ctc_order
+        where 1=1
+        <if test="customerUserId != null and customerUserId != ''">
+            and customer_user_id = #{customerUserId}
+        </if>
+        <if test="auditStatus == 'AUDIT_NOT_PROCESSED'">
+            and audit_status = #{auditStatus}
+            and auditor is null
+        </if>
+        <if test="auditStatus == 'AUDIT_PROCESSING'">
+            and audit_status = #{auditStatus}
+            and auditor = #{userId}
+        </if>
+        <if test="auditStatus == 'AUDIT_PROCESSED'">
+            and audit_status = #{auditStatus}
+            and confirm_user_id is null
+        </if>
+        <if test="auditStatus == 'AUDIT_CONFIRM'">
+            and audit_status = #{auditStatus}
+            and confirm_user_id = #{userId}
+        </if>
+        <if test="auditStatus == 'FAILURE'">
+            and audit_status = #{auditStatus}
+        </if>
+        <if test="direction != null and direction != ''">
+            and direction = #{direction}
+        </if>
+        <if test="status != null and status != ''">
+            and status = #{status}
+        </if>
+        <if test="startTime != null and startTime != 0">
+            and timestamp > #{startTime}
+        </if>
+        <if test="endTime != null and endTime != 0">
+            and timestamp &lt; #{endTime}
+        </if>
+        <if test="auditor != null and auditor != ''">
+            and auditor = #{auditor}
+        </if>
+        <if test="fromCardId != null and fromCardId != ''">
+            and from_card_id = #{fromCardId}
+        </if>
+        <if test="toCardId != null and toCardId != ''">
+            and to_card_id = #{toCardId}
+        </if>
+    </select>
+
+    <select id="getPin" resultType="java.lang.String">
+        select money_password from ag_admin_v1.cola_user where sys_user_id = #{userId}
+    </select>
+    <select id="getTelephone" resultType="java.lang.String">
+        select tel_phone from ag_admin_v1.base_user where id = #{userId} and area_code = '86'
+    </select>
+
+    <update id="buySub">
+        update ag_admin_v1.cola_me_balance set balance_available = balance_available-#{number}
+                , sign = ag_admin_v1.makesign(id,balance_available-#{number},balance_frozen,#{key})
+        where id = #{id} and balance_available-#{number} >= 0
+          and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{key}) = true
+    </update>
+    <update id="buyAdd">
+        update ag_admin_v1.cola_me_balance set balance_available = balance_available+#{number}
+                , sign = ag_admin_v1.makesign(id,balance_available+#{number},balance_frozen,#{key})
+        where id = #{id}
+          and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{key}) = true
+    </update>
+    <update id="sellSub">
+        update ag_admin_v1.cola_me_balance set balance_frozen = balance_frozen-#{number}
+                , sign = ag_admin_v1.makesign(id,balance_available,balance_frozen-#{number},#{key})
+        where id = #{id} and balance_frozen-#{number} >= 0
+          and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{key}) = true
+    </update>
+    <update id="sellAdd">
+        update ag_admin_v1.cola_me_balance set balance_available = balance_available+#{number}
+                , sign = ag_admin_v1.makesign(id,balance_available+#{number},balance_frozen,#{key})
+        where id = #{id}
+          and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{key}) = true
+    </update>
+    <update id="unFrozen">
+        update ag_admin_v1.cola_me_balance set balance_available = balance_available+#{number},balance_frozen = balance_frozen-#{number}
+                , sign = ag_admin_v1.makesign(id,balance_available+#{number},balance_frozen-#{number},#{key})
+        where id = #{id} and balance_frozen-#{number} >= 0
+          and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{key}) = true
+    </update>
+
+
+
+</mapper>

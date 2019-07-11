@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>bitcola ico审核</title>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+
+        var ws = new WebSocket('wss://bitcola.top/ws');
+
+        ws.onmessage = function (e,i) {
+            console.log(e.data);
+        }
+        ws.onopen = function(e){
+            ws.send(JSON.stringify({"subscribe": [
+                    "kline_BTC_EOS_1m",
+                    "kline_BTC_EOS_5m",
+                    "kline_BTC_EOS_15m",
+                    "kline_BTC_EOS_30m",
+                    "kline_BTC_EOS_1h",
+                    "kline_BTC_EOS_4h",
+                    "kline_BTC_EOS_6h",
+                    "kline_BTC_EOS_8h",
+                    "kline_BTC_EOS_12h",
+                    "kline_BTC_EOS_1d",
+                    "depth_BTC_EOS",
+                    "price_BTC_EOS",
+                    "order_BTC_EOS"
+                ]}))
+        }
+
+
+    </script>
+    <style>
+        .header {
+            margin: 10px auto;
+            width: 50%;
+        }
+
+        input[type="text"] {
+            padding: 3px 8px;
+            border-radius: 3px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        td, th {
+            font-size: 1em;
+            border: 1px solid #3c4146;
+            padding: 3px 7px 2px 7px;
+        }
+
+        th {
+            font-size: 1.1em;
+            text-align: left;
+            padding-top: 5px;
+            padding-bottom: 4px;
+            background-color: #303134;
+            color: #ffffff;
+        }
+
+        tr, td {
+            color: #000000;
+            background-color: #e2e2e2;
+            word-break: break-all;
+        }
+
+        tbody tr:hover {
+            background-color: #303134;
+            color: #ffffff;
+        }
+
+        p {
+            width: 40px;
+        }
+
+        a {
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <input id="username" value="woaishenhua115@163.com">
+    <input id="password" value="123456">
+    <button id="login">登录</button>
+    <button id="load">加载 ico 数据</button>
+</div>
+<table>
+    <thead>
+    <tr>
+        <th>id</th>
+        <th>用户 ID</th>
+        <th>firstName</th>
+        <th>lastName</th>
+        <th>性别</th>
+        <th>生日</th>
+        <th>邮箱</th>
+        <th>区号+手机号</th>
+        <th>预计充值数量</th>
+        <th>国家</th>
+        <th>证件类型</th>
+        <th>证件前面</th>
+        <th>证件后面</th>
+        <th>是否通过</th>
+        <th>充值地址</th>
+        <th>操作</th>
+    </tr>
+    </thead>
+    <tbody id="tbody">
+    </tbody>
+</table>
+<div>
+</div>
+</body>
+</html>

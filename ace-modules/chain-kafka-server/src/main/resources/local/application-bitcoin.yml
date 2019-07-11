@@ -1,0 +1,8 @@
+btc:
+  rpc_user: bitcola
+  rpc_password: bitcola
+  rpc_url:  http://192.168.0.87:61315
+usdt:
+  rpc_user: bitcola
+  rpc_password: BitColaUsdtPassWord
+  rpc_url:  http://192.168.0.85:8332

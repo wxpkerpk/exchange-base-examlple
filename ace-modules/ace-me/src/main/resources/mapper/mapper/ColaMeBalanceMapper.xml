@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.security.me.mapper.ColaMeBalanceMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.bitcola.me.entity.ColaMeBalance" id="colaMeBalanceMap">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="coinCode" column="coin_code"/>
+        <result property="balanceAvailable" column="balance_available"/>
+        <result property="balanceFrozen" column="balance_frozen"/>
+        <result property="addressIn" column="address_in"/>
+        <result property="note" column="note"/>
+    </resultMap>
+
+
+
+    <!--用户资金-->
+    <select id="info" resultType="com.bitcola.exchange.security.me.dto.BalanceDto">
+        select coin."coin_code" as coincode,b."balance_available" as available,b."balance_frozen" as frozen,coin."icon",
+        coin."prec",coin.is_recharge as allowDeposit,coin.is_withdraw allowWithdraw,coin.is_need_note as isNeedNote  from ag_admin_v1."cola_me_balance" as b
+        left join ag_admin_v1."cola_coin" as coin on b."coin_code" = coin."coin_code"
+        where "user_id" = #{userid} order by coin."sort"
+    </select>
+
+    <!--用户资金-->
+    <select id="selectById" resultMap="colaMeBalanceMap">
+        select * from ag_admin_v1."cola_me_balance" where "id" = #{id}
+    </select>
+
+    <!--用户币种余额-->
+    <select id="getCoinNumber" resultType="java.math.BigDecimal">
+        select "balance_available" from ag_admin_v1."cola_me_balance"
+        where "user_id" = #{userid} and "coin_code" = #{coincode}
+    </select>
+
+    <!--获取钱包币种信息-->
+    <select id="selectByCoinCode" resultMap="colaMeBalanceMap">
+        select * from ag_admin_v1."cola_me_balance" where "user_id" = #{userid} and "coin_code" = #{coincode}
+    </select>
+
+    <select id="getColaToken" resultMap="colaMeBalanceMap">
+        select * from ag_admin_v1."cola_me_balance" where "user_id" = #{userid} and "coin_code" = 'COLA'
+    </select>
+
+    <insert id="insertWithSign">
+        insert into ag_admin_v1."cola_me_balance" (id,user_id,coin_code,balance_available,balance_frozen,sign)
+        values (#{entity.id},#{entity.userId},#{entity.coinCode},#{entity.balanceAvailable},#{entity.balanceFrozen},
+                ag_admin_v1.makesign(#{entity.id},#{entity.balanceAvailable},#{entity.balanceFrozen},#{key}))
+    </insert>
+
+    <update id="withdrawSuccess">
+        update ag_admin_v1.cola_me_balance set balance_frozen = balance_frozen-#{number}
+                , sign = ag_admin_v1.makesign(id,balance_available,balance_frozen-#{number},#{key})
+        where user_id = #{userId} and coin_code = #{coinCode} and balance_frozen-#{number} >= 0
+          and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{key}) = true
+    </update>
+
+    <update id="withdrawFailed">
+        update ag_admin_v1.cola_me_balance set balance_frozen = balance_frozen-#{number},balance_available = balance_available+#{number}
+                , sign = ag_admin_v1.makesign(id,balance_available+#{number},balance_frozen-#{number},#{key})
+        where user_id = #{userId} and coin_code = #{coinCode} and balance_frozen-#{number} >= 0
+          and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{key}) = true
+    </update>
+
+    <select id="selectAddressAndNoteByBelong" resultType="java.lang.String">
+        select address_in from ag_admin_v1.cola_coin as t1 left join ag_admin_v1.cola_me_balance as t2 on t1.coin_code = t2.coin_code
+        where t1.belong = #{belong} and t2.user_id = #{userId} and t2.address_in is not null group by address_in limit 1
+    </select>
+
+</mapper>

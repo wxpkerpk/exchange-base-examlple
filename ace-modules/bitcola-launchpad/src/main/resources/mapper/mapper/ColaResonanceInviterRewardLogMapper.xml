@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitcola.exchange.launchpad.mapper.ColaResonanceInviterRewardLogMapper">
+
+    <resultMap id="logMap" type="com.bitcola.exchange.launchpad.entity.ColaResonanceInviterRewardLog">
+        <result column="id" property="id"/>
+        <result column="timestamp" property="timestamp"/>
+        <result column="user_id" property="userId"/>
+        <result column="inviter_user_id" property="inviterUserId"/>
+        <result column="amount" property="amount"/>
+        <result column="reward" property="reward"/>
+        <result column="symbol" property="symbol"/>
+        <result column="coin_code" property="coinCode"/>
+    </resultMap>
+
+    <select id="inviterRewardLog" resultMap="logMap">
+        select * from ag_admin_v1.cola_launchpad_resonance_reward where inviter_user_id = #{userId} and coin_code = #{coinCode} order by timestamp desc
+    </select>
+
+</mapper>

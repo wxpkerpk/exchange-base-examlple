@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.security.admin.mapper.ColaExchangeMapper">
+
+    <select id="page" resultType="java.util.Map">
+        select * from ag_admin_v1.cola_exchange_order
+        <where>
+            <if test="userId!=null and userId!=''">
+                and user_id = #{userId}
+            </if>
+            <if test="pair!=null and pair!=''">
+                and pair = #{pair}
+            </if>
+            <if test="status!=null and status!=''">
+                and status = #{status}
+            </if>
+            <if test="type!=null and type!=''">
+                and type = #{type}
+            </if>
+            <if test="direction!=null and direction!=''">
+                and direction = #{direction}
+            </if>
+            <if test="startTime!=null">
+                and timestamp > #{startTime}
+            </if>
+            <if test="endTime!=null">
+                and timestamp &lt; #{endTime}
+            </if>
+            <if test="containsSystem == null or containsSystem == false">
+                and user_id not in ('10','11')
+            </if>
+        </where>
+        order by timestamp desc limit #{limit} OFFSET #{offset}
+    </select>
+    <select id="total" resultType="java.lang.Long">
+        select count(1) from ag_admin_v1.cola_exchange_order
+        <where>
+            <if test="userId!=null and userId!=''">
+                and user_id = #{userId}
+            </if>
+            <if test="pair!=null and pair!=''">
+                and pair = #{pair}
+            </if>
+            <if test="status!=null and status!=''">
+                and status = #{status}
+            </if>
+            <if test="type!=null and type!=''">
+                and type = #{type}
+            </if>
+            <if test="direction!=null and direction!=''">
+                and direction = #{direction}
+            </if>
+            <if test="startTime!=null and startTime!=''">
+                and timestamp > #{startTime}
+            </if>
+            <if test="endTime!=null and endTime!=''">
+                and timestamp &lt; #{endTime}
+            </if>
+            <if test="containsSystem == null or containsSystem == false">
+                and user_id not in ('10','11')
+            </if>
+        </where>
+    </select>
+</mapper>

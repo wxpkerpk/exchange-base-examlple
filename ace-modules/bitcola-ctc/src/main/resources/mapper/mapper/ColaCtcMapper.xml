@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.ctc.mapper.ColaCtcMapper">
+
+    <resultMap id="orderMap" type="com.bitcola.ctc.ColaCtcOrder">
+        <result column="id" property="id"/>
+        <result column="direction" property="direction"/>
+        <result column="timestamp" property="timestamp"/>
+        <result column="coinCode" property="coin_code"/>
+        <result column="customer_user_id" property="customerUserId"/>
+        <result column="price" property="price"/>
+        <result column="number" property="number"/>
+        <result column="status" property="status"/>
+        <result column="from_card_id" property="fromCardId"/>
+        <result column="to_card_id" property="toCardId"/>
+        <result column="auditor" property="auditor"/>
+        <result column="audit_status" property="auditStatus"/>
+        <result column="confirm_user_id" property="confirmUserId"/>
+        <result column="audit_timestamp" property="auditTimestamp"/>
+        <result column="confirm_timestamp" property="confirmTimestamp"/>
+    </resultMap>
+    <select id="list" resultMap="orderMap">
+        select * from ag_admin_v1.cola_ctc_order
+        where customer_user_id = #{userId}
+        <if test="direction != null and direction != ''">
+            and direction = #{direction}
+        </if>
+        <if test="status != null and status != ''">
+            and status = #{status}
+        </if>
+        <if test="isPending != null and isPending == 1">
+            and status not in ('COMPLETED' ,'CANCELED')
+        </if>
+        <if test="isPending != null and isPending == 0">
+            and status in ('COMPLETED' ,'CANCELED')
+        </if>
+        <if test="cursor != null and cursor != 0">
+            and timestamp &lt; #{cursor}
+        </if>
+        <if test="startTime != null and startTime != 0">
+            and timestamp > #{startTime}
+        </if>
+        <if test="endTime != null and endTime != 0">
+            and timestamp &lt; #{endTime}
+        </if>
+        order by timestamp desc limit #{size}
+    </select>
+
+    <update id="frozenUserBalance">
+        update ag_admin_v1.cola_me_balance set balance_frozen = balance_frozen+#{number} , balance_available = balance_available-#{number}
+                , sign = ag_admin_v1.makesign(id,balance_available-#{number},balance_frozen+#{number},#{key})
+        where id = #{id} and balance_available-#{number} >= 0
+          and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{key}) = true
+    </update>
+
+    <select id="getNotifyTelephone" resultType="java.lang.String">
+        select telephone from ag_admin_v1.cola_sms where module = #{module}
+    </select>
+
+</mapper>

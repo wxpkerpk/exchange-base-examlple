@@ -1,0 +1,111 @@
+spring:
+  kafka:
+    bootstrap-servers: m1:9092
+    producer:
+      batch-size: 16384
+      buffer-memory: 33554432
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: consumer1
+      auto-offset-reset: earliest
+      enable-auto-commit: true
+      auto-commit-interval: 100
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  redis:
+     database: 1
+     host: ${REDIS_HOST:s1}
+     port: ${REDIS_PORT:6379}
+     password: ${REDIS_PASSWORD:wxpker}
+     timeout: 5000
+     jedis:
+       pool:
+         max-active: 1000
+  application:
+    name: exchange-caculate
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+  rabbitmq:
+    host: ${RABBIT_MQ_HOST:m1}
+    port:  ${RABBIT_MQ_PORT:5672}
+    username: bitcola
+    password: bitcolapwd
+  sleuth:
+    enabled: true
+    http:
+      legacy:
+        enabled: true
+sample:
+  zipkin:
+    # When enabled=false, traces log to the console. Comment to send to zipkin
+    enabled: false
+
+
+
+server:
+  port: 8641
+
+
+eureka:
+  instance:
+    statusPageUrlPath: /actuator/info
+    healthCheckUrlPath: /actuator/health
+    # docker 部署开启
+  client:
+    serviceUrl:
+      #            defaultZone: http://localhost:8761/eureka/
+      # docker 部署开启
+      defaultZone: http://${EUREKA_HOST:m1}:${EUREKA_PORT:8761}/eureka/
+# 必须配置
+feign:
+  httpclient:
+    enabled: false
+  okhttp:
+    enabled: true
+
+ribbon:
+  eureka:
+    enabled: true
+  ReadTimeout: 1000000
+  ConnectTimeout: 1000000
+  MaxAutoRetries: 0
+  MaxAutoRetriesNextServer: 1
+  OkToRetryOnAllOperations: false
+
+hystrix:
+  threadpool:
+    default:
+      coreSize: 1000 ##并发执行的最大线程数，默认10
+      maxQueueSize: 1000 ##BlockingQueue的最大队列数
+      queueSizeRejectionThreshold: 500 ##即使maxQueueSize没有达到，达到queueSizeRejectionThreshold该值后，请求也会被拒绝
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 110000
+
+
+
+
+auth:
+  serviceId: ace-auth
+  user:
+    token-header: Authorization
+  client:
+    id: exchange-caculate
+    secret: 123456
+    token-header: x-client-token
+
+
+
+
+
+
+influx:
+  host: ${influx-url:http://s2:8083}
+
+  table_name: coin_price

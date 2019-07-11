@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitcola.exchange.security.admin.mapper.ColaUserLimitMapper">
+
+    <resultMap id="userLimitMap" type="com.bitcola.me.entity.ColaUserLimit">
+        <id column="id" property="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="time" column="time"/>
+        <result property="type" column="type"/>
+        <result property="module" column="module"/>
+        <result property="reason" column="reason"/>
+    </resultMap>
+
+    <select id="getUserLimit" resultMap="userLimitMap">
+        select * from ag_admin_v1.cola_user_limit where user_id = #{userId} and module = #{module}
+    </select>
+
+</mapper>

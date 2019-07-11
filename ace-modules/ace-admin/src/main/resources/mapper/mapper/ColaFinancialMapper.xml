@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.security.admin.mapper.ColaFinancialMapper">
+
+    <select id="page" resultType="java.util.Map">
+        select * from ag_admin_v1.v_cola_financial_records
+        <where>
+            <if test="userId!=null and userId!=''">
+                and user_id = #{userId}
+            </if>
+            <if test="coinCode!=null and coinCode!=''">
+                and coin_code = #{coinCode}
+            </if>
+            <if test="actionType!=null and actionType!=''">
+                and action_type = #{actionType}
+            </if>
+        </where>
+        order by time desc limit #{limit} OFFSET #{offset}
+    </select>
+    <select id="total" resultType="java.lang.Long">
+        select count(1) from ag_admin_v1.v_cola_financial_records
+        <where>
+            <if test="userId!=null and userId!=''">
+                and user_id = #{userId}
+            </if>
+            <if test="coinCode!=null and coinCode!=''">
+                and coin_code = #{coinCode}
+            </if>
+            <if test="actionType!=null and actionType!=''">
+                and action_type = #{actionType}
+            </if>
+        </where>
+    </select>
+
+    <select id="countUser" resultType="java.lang.Long">
+        select count(1) from ag_admin_v1.cola_me_balance where coin_code = #{coinCode}
+    </select>
+    <select id="coinRange" resultType="java.util.Map">
+        SELECT
+               t3.id,
+               t3.username,
+               t3.tel_phone AS telephone,
+               t3.email,
+               t1.balance_available AS availble,
+               t1.balance_frozen AS frozen,
+               t1.balance_available + t1.balance_frozen AS total
+        FROM
+             ag_admin_v1.cola_me_balance AS t1
+                 LEFT JOIN ag_admin_v1.base_user AS t3 ON t1.user_id = t3.ID
+        WHERE
+                t1.coin_code = #{coinCode}
+        ORDER BY
+                 t1.balance_available + t1.balance_frozen DESC limit #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="financialPage" resultType="java.util.Map">
+        select * from ag_admin_v1.cola_system_balance where type = #{type}
+        <if test="userId!=null and userId!=''">
+            and (from_user = #{userId} or to_user = #{userId})
+        </if>
+        <if test="coinCode!=null and coinCode!=''">
+            and coin_code = #{coinCode}
+        </if>
+        order by time desc limit #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="financialCount" resultType="java.lang.Long">
+        select count(1) from ag_admin_v1.cola_system_balance where type = #{type}
+        <if test="userId!=null and userId!=''">
+            and (from_user = #{userId} or to_user = #{userId})
+        </if>
+        <if test="coinCode!=null and coinCode!=''">
+            and coin_code = #{coinCode}
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.chain.mapper.ColaChainTTKeyMapper">
+
+    <select id="getStartBlockNumber" resultType="java.lang.Long">
+        select block_number from bitcola_chain.cola_chain_eth_scan_block_number where id = 2
+    </select>
+
+    <update id="addBlockNumber">
+        update bitcola_chain.cola_chain_eth_scan_block_number set block_number = #{currentScanNumber} where id = 2
+    </update>
+    <select id="getTransferInfo" resultType="java.util.Map">
+        SELECT
+               t1.coin_code as coin,
+               t1.to_address as address
+        FROM
+             bitcola_chain.cola_chain_deposit as t1
+        WHERE t1.coin_code = 'TT'
+          and timestamp > #{start} and timestamp &lt; #{end}
+        GROUP BY
+             t1.coin_code,
+             t1.to_address
+    </select>
+
+</mapper>

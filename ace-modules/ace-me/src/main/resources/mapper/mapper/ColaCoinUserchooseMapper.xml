@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.security.me.mapper.ColaCoinUserchooseMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.bitcola.me.entity.ColaCoinUserchoose" id="colaCoinUserchooseMap">
+        <result property="id" column="id"/>
+        <result property="symbol" column="symbol"/>
+        <result property="coinCode" column="coin_code"/>
+        <result property="userId" column="user_id"/>
+    </resultMap>
+
+    <select id="isExist" resultType="int">
+        select count(1) from ag_admin_v1."cola_coin_userchoose" where "coin_code" = #{coincode} and "user_id" = #{userid} and "symbol" = #{symbol}
+    </select>
+
+    <delete id="removeByCoinCode">
+        delete from ag_admin_v1."cola_coin_userchoose" where "coin_code" = #{coincode} and "user_id" = #{userid} and "symbol" = #{symbol}
+    </delete>
+    <delete id="removeById">
+        delete from ag_admin_v1."cola_coin_userchoose" where "id"=#{id}
+    </delete>
+    <select id="list" resultMap="colaCoinUserchooseMap">
+        select * from ag_admin_v1."cola_coin_userchoose" where "user_id" = #{userid}
+    </select>
+</mapper>

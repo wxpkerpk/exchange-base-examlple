@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitcola.exchange.security.me.mapper.ColaSmsMapper">
+
+
+    <!--通过 coinCode 获取币种-->
+    <select id="getAreaCodeList" resultType="java.lang.String">
+        select "area_code" from ag_admin_v1."cola_sms_price" group by "area_code"
+    </select>
+
+    <select id="getCountryList" resultType="java.util.Map">
+        select "area_en" as en,"area_cn" as cn from ag_admin_v1."cola_sms_price" group by "area_en" order by "area_en"
+    </select>
+
+    <select id="countryAndAreaCode" resultType="java.util.Map">
+        select "area_en" as en,"area_cn" as cn,"area_code" code from ag_admin_v1."cola_sms_price" order by "area_en"
+    </select>
+
+</mapper>

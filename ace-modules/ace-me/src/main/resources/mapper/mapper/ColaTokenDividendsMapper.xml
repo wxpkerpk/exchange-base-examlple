@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitcola.exchange.security.me.mapper.ColaTokenDividendsMapper">
+
+
+    <select id="list" resultType="com.bitcola.exchange.security.me.vo.ColaTokenDividendsVo">
+        select id,coin_code as coinCode,time,token_number as tokenAmount,dividends,status
+        from ag_admin_v1.cola_token_dividends where user_id = #{userId}
+        <if test="keyWord!=null">
+
+        </if>
+        order by week desc,sort asc limit #{limit} OFFSET (#{limit}*(#{page}-1))
+    </select>
+
+    <select id="count" resultType="java.lang.Long">
+        select count(1) from ag_admin_v1.cola_token_dividends
+        where user_id = #{userId}
+        <if test="keyWord!=null">
+
+        </if>
+    </select>
+
+    <select id="getWeekTransactionFees" resultType="java.util.Map">
+        select coin_code as coin,sum(amount) as number
+        from ag_admin_v1.cola_system_balance
+        where type = 'FEES_TRANSACTION'
+        and time >#{start} and time &lt;=#{end}
+        group by coin_code
+    </select>
+
+</mapper>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.security.me.mapper.ColaIcoDepositMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.bitcola.me.entity.ColaIcoDeposit" id="colaIcoDepositMap">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="depositNumber" column="deposit_number"/>
+        <result property="price" column="price"/>
+        <result property="colaTokenNumber" column="cola_token_number"/>
+        <result property="time" column="time"/>
+        <result property="grantNumber" column="grant_number"/>
+        <result property="notGrantNumber" column="not_grant_number"/>
+        <result property="bonusNumber" column="bonus_number"/>
+        <result property="confirmStatus" column="confirm_status"/>
+        <result property="confirmNumber" column="confirm_number"/>
+        <result property="currentConfirmNumber" column="current_confirm_number"/>
+        <result property="fromAddress" column="from_address"/>
+        <result property="toAddress" column="to_address"/>
+    </resultMap>
+
+    <select id="depositList" resultMap="colaIcoDepositMap">
+        select * from ag_admin_v1."cola_ico_deposit" where "user_id" = #{userid} order by time desc
+    </select>
+
+    <select id="getUserIdByAddress" resultType="java.lang.String">
+        select "user_id" from ag_admin_v1."cola_ico_user" where "deposit_address" = #{address}
+    </select>
+
+    <insert id="insertDepositItem">
+        insert into ag_admin_v1."cola_ico_deposit" ("id","user_id","deposit_number","price","cola_token_number","time","bonus_number",
+                                                    "confirm_status","confirm_number","not_grant_number","grant_number",current_confirm_number
+                ) values (
+                                 #{id},#{userId},#{depositNumber},#{price},#{colaTokenNumber},#{time},#{bonusNumber},
+                                 #{confirmStatus},#{confirmNumber},#{notGrantNumber},#{grantNumber},#{currentConfirmNumber}
+                                 )
+    </insert>
+
+    <update id="updateDepositById">
+        update ag_admin_v1."cola_ico_deposit"  set "current_confirm_number" = #{currentconfirmnumber} ,confirm_status = #{status} where "id" = #{id}
+    </update>
+
+</mapper>

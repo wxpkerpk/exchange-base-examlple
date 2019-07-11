@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.security.me.mapper.ColaIcoUserMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.bitcola.me.entity.ColaIcoUser" id="colaIcoUserMap">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="firstName" column="first_name"/>
+        <result property="lastName" column="last_name"/>
+        <result property="gender" column="gender"/>
+        <result property="birthday" column="birthday"/>
+        <result property="email" column="email"/>
+        <result property="areaCode" column="area_code"/>
+        <result property="telPhone" column="tel_phone"/>
+        <result property="plannedInvestment" column="planned_investment"/>
+        <result property="address" column="address"/>
+        <result property="country" column="country"/>
+        <result property="idCardType" column="id_card_type"/>
+        <result property="frontSide" column="front_side"/>
+        <result property="backSide" column="back_side"/>
+        <result property="checkStatus" column="check_status"/>
+        <result property="depositAddress" column="deposit_address"/>
+    </resultMap>
+
+    <select id="icoInfo" resultMap="colaIcoUserMap">
+        select * from ag_admin_v1."cola_ico_user" where "user_id" = #{userid}
+    </select>
+
+    <select id="icoStatus" resultType="java.lang.Integer">
+        select "check_status" from ag_admin_v1."cola_ico_user" where "user_id" = #{userid}
+    </select>
+
+    <select id="colaTokenNumber" resultType="java.math.BigDecimal">
+        select sum("cola_token_number"+"bonus_number") from ag_admin_v1."cola_ico_deposit" where "user_id" = #{userid}
+    </select>
+
+    <select id="colaTokenIcoTotalNumber" resultType="java.math.BigDecimal">
+        select sum("cola_token_number"+"bonus_number") from ag_admin_v1."cola_ico_deposit"
+    </select>
+
+    <delete id="deleteIcoInfo">
+        delete from ag_admin_v1."cola_ico_user" where "user_id" = #{userid}
+    </delete>
+
+    <select id="checkAddress" resultType="java.lang.Integer">
+        select count(1) from ag_admin_v1."cola_ico_user" where "address" = #{address} and "user_id" &lt;> #{userid}
+    </select>
+
+    <select id="checkSubscribeExist" resultType="java.lang.Integer">
+        select count(1) from ag_admin_v1."cola_ico_subscribe" where "email" = #{email}
+    </select>
+
+    <insert id="subscribe">
+        insert into ag_admin_v1."cola_ico_subscribe" ("id", "email") values (#{id},#{email})
+    </insert>
+
+</mapper>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitcola.dataservice.mapper.ColaCommunityNotificationsMapper">
+
+    <resultMap type="com.bitcola.community.entity.NotificationsEntity" id="baseMap">
+        <result property="id" column="id"/>
+        <result property="type" column="type"/>
+        <result property="fromUser" column="from_user"/>
+        <result property="toUser" column="to_user"/>
+        <result property="actionId" column="action_id"/>
+        <result property="actionInfo" column="action_info"/>
+        <result property="time" column="time"/>
+        <result property="isRead" column="is_read"/>
+        <result property="info" column="info"/>
+        <result property="actionType" column="action_type"/>
+    </resultMap>
+
+    <resultMap type="com.bitcola.community.entity.NotificationsVo" id="listMap">
+        <result property="id" column="id"/>
+        <result property="type" column="type"/>
+        <result property="fromUser" column="from_user"/>
+        <result property="toUser" column="to_user"/>
+        <result property="actionId" column="action_id"/>
+        <result property="actionInfo" column="action_info"/>
+        <result property="time" column="time"/>
+        <result property="isRead" column="is_read"/>
+        <result property="info" column="info"/>
+        <result property="actionType" column="action_type"/>
+        <result property="fromUsername" column="username"/>
+        <result property="fromUserAvatar" column="avatar"/>
+        <result property="fromUserNickName" column="nick_name"/>
+    </resultMap>
+
+    <select id="list" resultMap="listMap">
+        select t.*,t2.nick_name,t2.avatar,t3.username from ag_admin_v1.cola_community_notifications as t
+        left join ag_admin_v1.cola_user as t2 on t.from_user = t2.sys_user_id
+        left join ag_admin_v1.base_user as t3 on t.from_user = t3.id
+        where t.to_user = #{userId} and t.time &lt; #{timestamp}
+        order by t.time desc
+        limit #{size}
+    </select>
+
+    <select id="notReadNumber" resultType="java.lang.Long">
+        select count(1) from ag_admin_v1.cola_community_notifications where to_user = #{userId} and is_read = 0
+    </select>
+
+    <update id="read">
+        update ag_admin_v1.cola_community_notifications set is_read = 1 where id = #{id}
+    </update>
+
+    <update id="readAll">
+        update ag_admin_v1.cola_community_notifications set is_read = 1 where to_user = #{userId}
+    </update>
+
+</mapper>

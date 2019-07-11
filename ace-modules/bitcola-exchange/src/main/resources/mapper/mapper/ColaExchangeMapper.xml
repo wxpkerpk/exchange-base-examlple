@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.mapper.ColaExchangeMapper">
+
+    <resultMap id="balanceMap" type="com.bitcola.exchange.dto.ColaUserBalanceVo">
+        <result property="coinCode" column="coin_code" />
+        <result property="balanceAvailable" column="balance_available" />
+        <result property="balanceFrozen" column="balance_frozen" />
+    </resultMap>
+    <resultMap id="marketInfo" type="com.bitcola.exchange.data.MarketInfo">
+        <result property="pair" column="pair" />
+        <result property="icon" column="icon" />
+        <result property="sort" column="sort" />
+        <result property="isFav" column="fav" />
+        <result property="openTime" column="online_time" />
+    </resultMap>
+    <resultMap id="orderMap" type="com.bitcola.exchange.message.OrderMessage">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="timestamp" property="timestamp"/>
+        <result column="pair" property="pair"/>
+        <result column="direction" property="direction"/>
+        <result column="price" property="price"/>
+        <result column="number" property="number"/>
+        <result column="remain" property="remain"/>
+        <result column="status" property="status"/>
+        <result column="type" property="type"/>
+        <result column="average_price" property="averagePrice"/>
+        <result column="fee_rate" property="feeRate"/>
+    </resultMap>
+    <resultMap id="orderDetail" type="com.bitcola.exchange.entity.MatchRecord">
+        <id column="id" property="id"/>
+        <result column="order_id" property="orderId"/>
+        <result column="type" property="type"/>
+        <result column="price" property="price"/>
+        <result column="number" property="number"/>
+        <result column="pair" property="pair"/>
+        <result column="timestamp" property="timestamp"/>
+        <result column="fee" property="fee"/>
+        <result column="fee_coin_code" property="feeCoinCode"/>
+        <result column="direction" property="direction"/>
+    </resultMap>
+
+    <select id="getFirstSymbolByCoinCode" resultType="java.lang.String">
+        SELECT symbol FROM ag_admin_v1.cola_coin_symbol
+        WHERE coin_code = #{coinCode} AND symbol = 'USDT'
+        UNION ALL
+                (SELECT symbol FROM ag_admin_v1.cola_coin_symbol
+        WHERE coin_code = #{coinCode} AND symbol != 'USDT'
+        ORDER BY sort )
+        LIMIT 1
+    </select>
+
+    <select id="getUserBalance" resultMap="balanceMap">
+        select coin_code,balance_available,balance_frozen from ag_admin_v1.cola_me_balance where id = #{id}
+    </select>
+    <select id="getUserMoneyPassword" resultType="java.lang.String">
+        select money_password from ag_admin_v1.cola_user where sys_user_id = #{userId}
+    </select>
+
+    <select id="getMarketInfoByCoinCodeSymbol" resultMap="marketInfo">
+        select case when t3.id is null then false else true end as fav,
+               t2.icon ,t1.sort,t1.online_time,t1.coin_code||'_'||t1.symbol as pair
+        from ag_admin_v1.cola_coin_symbol as t1
+                 left join ag_admin_v1.cola_coin as t2 on t1.coin_code = t2.coin_code
+                 left join ag_admin_v1.cola_coin_userchoose as t3
+                     on t1.coin_code = t3.coin_code and t1.symbol = t3.symbol
+                    and t3.user_id = #{userId}
+        where 1=1
+        <if test="symbol != null and symbol != ''">
+            and t1.symbol = #{symbol}
+        </if>
+        <if test="coinCode != null and coinCode != ''">
+            and t1.coin_code = #{coinCode}
+        </if>
+        <if test="onlyFav == 1">
+            and t3.user_id = #{userId}
+        </if>
+        order by t1.sort
+    </select>
+
+    <select id="getMarketOrder" resultType="com.bitcola.exchange.websocket.OrderNotifyEntity">
+        select price,number,direction,timestamp from ag_admin_v1.cola_exchange_match_record
+        where pair = #{pair} and type = 'TAKER' order by timestamp desc limit #{size}
+    </select>
+
+    <select id="orderManagement" resultMap="orderMap">
+        select * from ag_admin_v1.cola_exchange_order as t1 where 1=1
+        <if test="userId !=null and userId != ''">
+            AND t1.user_id =#{userId}
+        </if>
+        <if test="code !=null and code != ''">
+            AND t1.pair =#{code}
+        </if>
+        <if test="state !=null and state != ''">
+            AND t1."status" =#{state}
+        </if>
+        <if test="type !=null and type != ''">
+            AND t1.direction =#{type}
+        </if>
+        <if test="pairL!=null and pairL != ''">
+            and t1.pair like #{pairL}||'_%'
+        </if>
+        <if test="pairR!=null and pairR != ''">
+            and t1.pair like '%_'||#{pairR}
+        </if>
+        <if test="startTime!=null">
+            and t1.timestamp > #{startTime}
+        </if>
+        <if test="endTime!=null">
+            and t1.timestamp &lt; #{endTime}
+        </if>
+        order by t1.timestamp desc limit #{size} OFFSET (#{size}*(#{page}-1))
+    </select>
+
+    <select id="countOrderManagement" resultType="java.lang.Long">
+        select count(1) from ag_admin_v1.cola_exchange_order as t1
+        WHERE t1.user_id = #{userId}
+        <if test="code !=null and code != ''">
+            AND t1.pair =#{code}
+        </if>
+        <if test="state !=null and state != ''">
+            AND t1."status" =#{state}
+        </if>
+        <if test="type !=null and type != ''">
+            AND t1.direction =#{type}
+        </if>
+        <if test="pairL!=null and pairL != ''">
+            and t1.pair like #{pairL}||'_%'
+        </if>
+        <if test="pairR!=null and pairR != ''">
+            and t1.pair like '%_'||#{pairR}
+        </if>
+        <if test="startTime!=null">
+            and t1.timestamp > #{startTime}
+        </if>
+        <if test="endTime!=null">
+            and t1.timestamp &lt; #{endTime}
+        </if>
+    </select>
+
+    <select id="getPersonOrder"  resultMap="orderMap">
+        select * from ag_admin_v1.cola_exchange_order as t1
+        WHERE t1.user_id = #{userId}
+        <choose>
+            <when test="isPending !=null and isPending == 1">
+                and (t1.status = 'PENDING' or t1.status = 'PARTIAL_COMPLETED')
+            </when>
+            <otherwise>
+                and (t1.status = 'PARTIAL_CANCELLED' or t1.status = 'FULL_CANCELLED' or t1.status = 'FULL_COMPLETED')
+            </otherwise>
+        </choose>
+        <if test="code !=null and code != ''">
+            AND t1.pair =#{code}
+        </if>
+        <if test="type !=null and type != ''">
+            AND t1.direction =#{type}
+        </if>
+        and t1.timestamp  &lt;  #{timestamp}
+        order by t1.timestamp desc limit #{size}
+    </select>
+    <select id="personOrderDetail" resultMap="orderDetail">
+        select * from ag_admin_v1.cola_exchange_match_record
+        where order_id = #{orderId}
+        order by timestamp desc
+    </select>
+    <select id="getAllPair" resultType="java.lang.String">
+        select coin_code||'_'||symbol from ag_admin_v1.cola_coin_symbol order by sort
+    </select>
+
+    <select id="getInviterAll" resultType="java.util.Map">
+        select t2.sys_user_id as inviter,t1.sys_user_id as u from ag_admin_v1.cola_user as t1
+        left join ag_admin_v1.cola_user as t2 on t1.inviter = t2.invite_code order by t1.time desc
+        limit #{size} OFFSET (#{size}*(#{page}-1))
+    </select>
+
+    <select id="getYSTUsdtNumber" resultType="java.util.Map">
+        select user_id as u,price,number from ag_admin_v1.cola_exchange_match_record where pair = #{pair} and direction = 'buy'
+    </select>
+</mapper>

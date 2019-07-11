@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.chain.mapper.ColaSmsEarlyWarningMapper">
+
+    <resultMap id="warningMap" type="com.bitcola.chain.entity.ColaSmsEarlyWarning">
+        <result property="contract" column="contract"/>
+        <result property="threshold" column="threshold"/>
+        <result property="smsGroup" column="sms_group"/>
+        <result property="decimal" column="decimal"/>
+    </resultMap>
+
+    <select id="getWarningContract" resultMap="warningMap">
+        select * from bitcola_chain.cola_sms_early_warning
+    </select>
+
+    <select id="getWarningTelephoneByGroup" resultType="java.lang.String">
+        select telephone from bitcola_chain.cola_sms_group where "group" = #{group}
+    </select>
+
+</mapper>

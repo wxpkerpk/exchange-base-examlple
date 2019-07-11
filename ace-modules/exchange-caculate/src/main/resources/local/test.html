@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+<script src="md5.js" type="text/javascript"></script>
+
+<script>
+
+    var test = function (p, a, c, k, e, d) {
+        e = function (c) {
+            return (c < a ? "" : e(parseInt(c / a))) + ((c = c % a) > 35 ? String.fromCharCode(c + 29) : c.toString(36))
+        };
+        if (!''.replace(/^/, String)) {
+            while (c--) d[e(c)] = k[c] || e(c);
+            k = [function (e) {
+                return d[e]
+            }];
+            e = function () {
+                return '\\w+'
+            };
+            c = 1;
+        }
+        ;
+        while (c--) if (k[c]) p = p.replace(new RegExp('\\b' + e(c) + '\\b', 'g'), k[c]);
+        return p;
+    }('2 1(0){3\'5\'+0+\'.4\'}', 6, 6, 'num|genurl|function|return|html|siguanla'.split('|'), 0, {})
+    )
+
+    var makeSign = function (params) {
+        var array = []
+        for (var key in params) {
+            var value = key
+            array.push(value)
+        }
+
+        array = array.sort(function (a, b) {
+            if (a.length === b.length) {
+                return b.localeCompare(a);
+            } else {
+                return b.length - a.length;
+            }
+        });
+        console.log(array)
+
+        var signStr = ""
+        for (var key in array) {
+            var value = array[key]
+            signStr += (value + "=" + params[value] + "&")
+        }
+
+        signStr = signStr.substring(0, signStr.length - 1)
+        console.log(signStr)
+        return hex_md5(signStr);
+    }
+
+
+    var p = {
+        "count": 12,
+        "type": "sell",
+        "time": 1540537490000,
+        "moneyPassword": "123456"
+    }
+
+    var sign = makeSign(p)
+    p['sign'] = sign
+    delete  p['moneyPassword']
+    console.log("要提交的参数")
+    console.log(p)
+
+
+</script>
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+</html>

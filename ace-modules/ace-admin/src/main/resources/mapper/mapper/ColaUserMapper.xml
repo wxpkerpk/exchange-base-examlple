@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.security.admin.mapper.ColaUserMapper">
+
+	<select id="list" resultType="com.bitcola.exchange.security.admin.entity.SysUserEntity">
+        select t1.id,t1.username,t2.nick_name as nickName,t1.tel_phone as telephone,t1.email,t2.time as signUpTime,t2.kyc
+        from ag_admin_v1.base_user as t1
+        left join ag_admin_v1.cola_user as t2 on t1.id = t2.sys_user_id
+        where to_number(t1.id, '9999999999999999999') > 100
+        <if test="keyword!=null and keyword!=''">
+            and (
+                upper(t1."username") like upper('%'||#{keyword}||'%')
+                or upper(t1."email") like upper('%'||#{keyword}||'%')
+                or t1."tel_phone" like '%'||#{keyword}||'%'
+                or upper(t2."nick_name") like upper('%'||#{keyword}||'%')
+                or t1.id = #{keyword})
+        </if>
+        order by to_number(t1.id, '9999999999999999999') limit #{limit} OFFSET #{offset}
+    </select>
+    <select id="total" resultType="java.lang.Long">
+        select count(1)
+        from ag_admin_v1.base_user as t1
+         left join ag_admin_v1.cola_user as t2 on t1.id = t2.sys_user_id
+        where to_number(t1.id, '9999999999999999999') > 100
+        <if test="keyword!=null and keyword!=''">
+            and (
+            upper(t1."username") like upper('%'||#{keyword}||'%')
+            or upper(t1."email") like upper('%'||#{keyword}||'%')
+            or t1."tel_phone" like '%'||#{keyword}||'%'
+            or upper(t2."nick_name") like upper('%'||#{keyword}||'%')
+            or t1.id = #{keyword}
+            )
+        </if>
+    </select>
+    <select id="info" resultType="java.util.Map">
+        select * from ag_admin_v1.base_user as t1 left join ag_admin_v1.cola_user as t2 on t1.id = t2.sys_user_id where t1.id = #{id}
+    </select>
+    <select id="balance" resultType="java.util.Map">
+        select * from ag_admin_v1.cola_me_balance where user_id = #{id}
+    </select>
+    <select id="transaction" resultType="java.util.Map">
+        select * from ag_admin_v1.cola_exchange_order where user_id = #{id} order by timestamp desc limit 10
+    </select>
+    <update id="updateBaseUser">
+        update ag_admin_v1.base_user
+        <set>
+            <if test="username!=null and username!=''">
+                username = #{username},
+            </if>
+            <if test="email!=null and email!=''">
+                email = #{email},
+            </if>
+            <if test="telephone!=null and telephone!=''">
+                tel_phone = #{telephone},
+            </if>
+            <if test="areaCode!=null and areaCode!=''">
+                area_code = #{areaCode}
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+    <update id="updateColaUser">
+        update ag_admin_v1.cola_user
+        <set>
+            <if test="enable!=null">
+                enable = #{enable},
+            </if>
+        </set>
+        where sys_user_id = #{id}
+    </update>
+    <update id="resetPin">
+        update ag_admin_v1.cola_user set money_password = null where sys_user_id = #{id}
+    </update>
+    <select id="repeat" resultType="java.lang.Integer">
+        select count(1) from ag_admin_v1.base_user
+        <where>
+            <if test="username!=null and username!=''">
+                and username = #{username}
+            </if>
+            <if test="email!=null and email!=''">
+                and email = #{email}
+            </if>
+            <if test="telephone!=null and telephone!=''">
+                and tel_phone = #{telephone} and area_code = #{areaCode}
+            </if>
+        </where>
+    </select>
+    <select id="inviterList" resultType="com.bitcola.exchange.security.admin.entity.SysUserEntity">
+        select t1.id,t1.username,t2.nick_name as nickName,t1.tel_phone as telephone,t1.email,t2.time as signUpTime,t2.kyc
+        from ag_admin_v1.base_user as t1
+         left join ag_admin_v1.cola_user as t2 on t1.id = t2.sys_user_id
+        where t2.inviter = (select invite_code from ag_admin_v1.cola_user where sys_user_id = #{userId})
+        order by t2.time desc
+        limit #{limit} OFFSET #{offset}
+    </select>
+    <select id="inviterCount" resultType="java.lang.Long">
+        select count(1)
+        from ag_admin_v1.cola_user as t1
+        where t1.inviter = (select invite_code from ag_admin_v1.cola_user where sys_user_id = #{userId})
+    </select>
+    <insert id="insertCustomer">
+        insert into ag_admin_v1.cola_user
+        (invite_code, sys_user_id, withdraw_time, enable, avatar, nick_name, time)
+        VALUES (#{id},#{id},0,1,#{avatar},#{nickName},#{timestamp})
+    </insert>
+
+    <select id="userAddressList" resultType="com.bitcola.exchange.security.admin.vo.UserAddress">
+        select id,user_id as userId,coin_code as coinCode,address_in as address,balance_available as available ,balance_frozen as frozen from ag_admin_v1.cola_me_balance
+        <where>
+            <if test="address!=null and address!=''">
+                and address_in = #{address}
+            </if>
+            <if test="userId!=null and userId!=''">
+                and user_id = #{userId}
+            </if>
+            <if test="coinCode!=null and coinCode!=''">
+                and coin_code = #{coinCode}
+            </if>
+        </where>
+        order by id asc limit #{limit} OFFSET #{offset}
+    </select>
+    <select id="userAddressCount" resultType="java.lang.Long">
+        select count(1) from ag_admin_v1.cola_me_balance
+        <where>
+            <if test="address!=null and address!=''">
+                and address_in = #{address}
+            </if>
+            <if test="userId!=null and userId!=''">
+                and user_id = #{userId}
+            </if>
+            <if test="coinCode!=null and coinCode!=''">
+                and coin_code = #{coinCode}
+            </if>
+        </where>
+    </select>
+</mapper>

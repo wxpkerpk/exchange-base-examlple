@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitcola.dataservice.mapper.ColaUserBalanceMapper">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.bitcola.me.entity.ColaMeBalance" id="colaMeBalanceMap">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="coinCode" column="coin_code"/>
+        <result property="balanceAvailable" column="balance_available"/>
+        <result property="balanceFrozen" column="balance_frozen"/>
+        <result property="addressIn" column="address_in"/>
+        <result property="note" column="note"/>
+    </resultMap>
+
+    <resultMap type="com.bitcola.me.entity.ColaCoin" id="colaCoinMap">
+        <result property="id" column="id"/>
+        <result property="coinCode" column="coin_code"/>
+        <result property="coinCodeCn" column="coin_code_cn"/>
+        <result property="coinCodeEn" column="coin_code_en"/>
+        <result property="coinNote" column="coin_note"/>
+        <result property="website" column="website"/>
+        <result property="isNeedNote" column="is_need_note"/>
+        <result property="feesPercent" column="fees_percent"/>
+        <result property="feesFlat" column="fees_flat"/>
+        <result property="blockBrowser" column="block_browser"/>
+        <result property="isWithdraw" column="is_withdraw"/>
+        <result property="isRecharge" column="is_recharge"/>
+        <result property="isErc20" column="is_erc20"/>
+        <result property="withdrawOne" column="withdraw_one"/>
+        <result property="withdrawAmount" column="withdraw_amount"/>
+        <result property="withdrawAuto" column="withdraw_auto"/>
+        <result property="feesReal" column="fees_real"/>
+        <result property="icon" column="icon"/>
+        <result property="prec" column="prec"/>
+        <result property="rechargeDescriptionCn" column="recharge_description_cn"/>
+        <result property="rechargeDescriptionEn" column="recharge_description_en"/>
+        <result property="minWithdrawNumber" column="min_withdraw_number"/>
+        <result property="depositConfirmationNumber" column="deposit_confirmation_number"/>
+        <result property="confirmationNumber" column="confirmation_number"/>
+    </resultMap>
+
+    <select id="getCoin" resultMap="colaCoinMap">
+        select * from ag_admin_v1."cola_coin" where "coin_code" = #{code}
+    </select>
+
+    <select id="selectBalance" resultMap="colaMeBalanceMap">
+        select * from ag_admin_v1."cola_me_balance" b where b."user_id"=#{userid} and b."coin_code"=#{code}
+    </select>
+
+
+    <select id="selectInvitor" resultType="String">
+        select sys_user_id from ag_admin_v1."cola_user"  where invite_code in (select inviter from ag_admin_v1."cola_user"  as a2 where a2.sys_user_id=#{userId} )
+
+    </select>
+
+
+    <!--用户资金-->
+    <select id="info" resultMap="colaMeBalanceMap">
+        select "id","coin_code","balance_available","balance_frozen","user_id" from ag_admin_v1."cola_me_balance" where "user_id" = #{userid}
+    </select>
+
+    <!--用户资金-->
+    <select id="selectById" resultMap="colaMeBalanceMap">
+        select * from ag_admin_v1."cola_me_balance" where "id" = #{id}
+    </select>
+
+    <!--用户币种余额-->
+    <select id="getCoinNumber" resultType="java.math.BigDecimal">
+        select "balance_available" from ag_admin_v1."cola_me_balance"
+        where "user_id" = #{userid} and "coin_code" = #{coincode}
+    </select>
+
+    <!--获取钱包币种信息-->
+    <select id="selectByCoinCode" resultMap="colaMeBalanceMap">
+        select * from ag_admin_v1."cola_me_balance" where "user_id" = #{userid} and "coin_code" = #{coincode}
+    </select>
+
+
+    <update id="addUserBanlance" >
+        update ag_admin_v1."cola_me_balance"
+            set balance_available = balance_available + #{gain},
+                sign = ag_admin_v1.makesign(id,(balance_available + #{gain})::numeric,balance_frozen::numeric,#{key})
+
+        where user_id = #{userID} and coin_code = #{coinCode}
+          and ag_admin_v1.checksign(sign,id,balance_available::numeric,balance_frozen::numeric,#{key}) = true
+        ;
+    </update>
+
+    <update id="reduceUserBanlance" >
+        update ag_admin_v1."cola_me_balance"
+            set balance_available = balance_available - #{gain},
+                sign = ag_admin_v1.makesign(id,(balance_available - #{gain})::numeric,balance_frozen::numeric,#{key})
+
+        where user_id = #{userID} and coin_code = #{coinCode} and balance_available - #{gain}>=0
+          and ag_admin_v1.checksign(sign,id,balance_available::numeric,balance_frozen::numeric,#{key}) = true
+        ;
+    </update>
+
+
+
+    <update id="addUserFrozenBanlance" >
+        update ag_admin_v1."cola_me_balance"
+            set balance_frozen = balance_frozen + #{gain},
+                sign = ag_admin_v1.makesign(id ,balance_available::numeric,(balance_frozen + #{gain})::numeric,#{key})
+
+        where user_id = #{userID} and coin_code = #{coinCode}
+          and ag_admin_v1.checksign(sign,id,balance_available::numeric,balance_frozen::numeric,#{key}) = true
+
+    </update>
+
+    <update id="reduceUserFrozenBanlance">
+        update ag_admin_v1.cola_me_balance
+            set balance_frozen = balance_frozen - #{gain},
+                sign = ag_admin_v1.makesign(id,balance_available::numeric,(balance_frozen - #{gain})::numeric,#{key})
+         where user_id = #{userID} and coin_code = #{coinCode} and balance_frozen - #{gain}>= -0.0000001
+           and ag_admin_v1.checksign(sign,id,balance_available::numeric,balance_frozen::numeric,#{key}) = true
+        ;
+    </update>
+
+
+    <update id="setFrozenBanlanceZero">
+        update ag_admin_v1.cola_me_balance
+            set balance_frozen = 0,
+                sign = ag_admin_v1.makesign(id,balance_available::numeric,0,#{key})
+         where user_id = #{userID} and coin_code = #{coinCode}
+           and ag_admin_v1.checksign(sign,id,balance_available::numeric,balance_frozen::numeric,#{key}) = true
+        ;
+    </update>
+    <update id="systemIn" parameterType="com.bitcola.me.entity.ColaSystemBalance">
+        update ag_admin_v1.cola_me_balance set balance_available = balance_available+#{balance.amount}
+                , sign = ag_admin_v1.makesign(id,balance_available+#{balance.amount},balance_frozen,#{key})
+        where user_id = '8' and coin_code = #{balance.coinCode}
+          and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{key}) = true
+    </update>
+
+    <update id="systemOut" parameterType="com.bitcola.me.entity.ColaSystemBalance">
+        update ag_admin_v1.cola_me_balance set balance_available = balance_available-#{balance.amount}
+                , sign = ag_admin_v1.makesign(id,balance_available-#{balance.amount},balance_frozen,#{key})
+        where user_id = '8' and coin_code = #{balance.coinCode} and balance_available-#{balance.amount}>=0
+          and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{key}) = true
+    </update>
+    <select id="getColaToken" resultMap="colaMeBalanceMap">
+        select * from ag_admin_v1.cola_me_balance where user_id = #{userId} and coin_code = 'COLA'
+    </select>
+
+</mapper>

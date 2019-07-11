@@ -1,0 +1,1 @@
+nohup java -Xms2048m -Xmx2048m -Xss512K -jar -Dspring.config.location=../conf/application.yml,../conf/application-bitcoin.yml ../lib/chain-kafka-server-2.0-SNAPSHOT.jar > ../debug.log &

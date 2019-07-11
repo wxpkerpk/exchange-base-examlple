@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.security.me.mapper.ColaChatMapper">
+
+    <insert id="newGroup">
+        insert into ag_admin_v1.cola_me_group (id, avatar,group_name) values (#{id},#{avatar},#{groupName})
+    </insert>
+    <select id="groupInfo" resultType="java.util.Map">
+        select * from ag_admin_v1.cola_me_group where id in
+        <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <update id="updateGroup">
+        update ag_admin_v1.cola_me_group
+        <set>
+            <if test="avatar!=null and avatar!=''">
+                avatar = #{avatar},
+            </if>
+            <if test="groupName!=null and groupName!=''">
+                group_name = #{groupName}
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="checkGroupNameRepeat" resultType="java.lang.Integer">
+        select count(1) from ag_admin_v1.cola_me_group where group_name = #{groupName}
+    </select>
+
+</mapper>

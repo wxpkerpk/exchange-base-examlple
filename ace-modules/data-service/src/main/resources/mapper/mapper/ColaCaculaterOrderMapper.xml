@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitcola.dataservice.mapper.ColaCaculaterOrderMapper">
+
+    <resultMap id="colaOrder" type="com.bitcola.caculate.entity.ColaOrder">
+        <id column="id" jdbcType="VARCHAR" property="id"/>
+        <result column="count" jdbcType="DECIMAL" property="count"/>
+        <result column="coin_code" jdbcType="VARCHAR" property="coinCode"/>
+
+        <result column="user_id" jdbcType="VARCHAR" property="userId"/>
+
+        <result column="price" jdbcType="DECIMAL" property="price"/>
+        <result column="total" jdbcType="DECIMAL" property="total"/>
+        <result column="time" jdbcType="DATE" property="time"/>
+        <result column="type" jdbcType="VARCHAR" property="type"/>
+        <result column="origin_total" javaType="DECIMAL" property="originTotal"/>
+
+
+    </resultMap>
+
+    <resultMap id="depthLine" type="com.bitcola.caculate.entity.DepthLine">
+        <result column="countSum" jdbcType="DECIMAL" property="countSum"/>
+        <result column="price2" jdbcType="DECIMAL" property="price"/>
+    </resultMap>
+
+
+    <!--用户资金-->
+    <select id="selectById" resultType="com.bitcola.caculate.entity.ColaOrder">
+        select user_id      as userId,
+               coin_code    as coinCode,
+               id,
+               count,
+               price,
+               time,
+               type,
+               total,
+               status,
+               origin_total as originTotal
+        from ag_admin_v1."cola_caculate_order"
+        where id = #{id}
+    </select>
+
+    <select id="selectBuyDepth" resultMap="depthLine">
+
+        select *
+        from (select sum(total / price)                                                  countSum,
+                     FLOOR(price :: numeric / #{precision} :: numeric) * #{precision} as price2
+              from ag_admin_v1."cola_caculate_order"
+              where coin_code = #{code}
+                and "type" = 'buy'
+                and "status" = 'pending'
+
+              group by price2
+              order by price2 desc) as tb
+        where tb.countsum >= #{minCountPrecision}
+        ORDER BY tb.price2 desc
+
+        limit #{limit}
+
+    </select>
+    <select id="selectSellDepth" resultMap="depthLine">
+
+        select *
+        from (select sum(count) countSum, CEIL(price :: numeric / #{precision} :: numeric) * #{precision} as price2
+              from ag_admin_v1."cola_caculate_order"
+              where coin_code = #{code}
+                and "type" = 'sell'
+                and status = 'pending'
+              group by price2
+              order by price2 asc) as tb
+        where tb.countsum >= #{minCountPrecision}
+        ORDER BY tb.price2 asc
+
+        limit #{limit};
+
+    </select>
+    <select id="selectUserAndCode" resultType="com.bitcola.caculate.entity.ColaOrder">
+        SELECT user_id as userId,coin_code as coinCode,id,count,price,time,type,total,status,origin_total as originTotal
+        FROM ag_admin_v1."cola_caculate_order" where 1=1
+        <if test="userid !=null">
+            AND user_id =#{userid}
+        </if>
+        <if test="code !=null">
+            AND coin_code =#{code}
+        </if>
+        <if test="state !=null">
+            AND "status" =#{state}
+        </if>
+        <if test="type !=null">
+            AND "type" =#{type}
+        </if>
+        <if test="pairL!=null">
+            and coin_code like #{pairL}||'_%'
+        </if>
+        <if test="pairR!=null">
+            and coin_code like '%_'||#{pairR}
+        </if>
+        <if test="startTime!=null">
+            and time > #{startTime}
+        </if>
+        <if test="endTime!=null">
+            and time &lt; #{endTime}
+        </if>
+        order by "time" desc
+
+        limit #{size} OFFSET #{start}
+
+    </select>
+
+    <select id="countSelfOrders" resultType="java.lang.Long">
+        SELECT count(1) FROM ag_admin_v1."cola_caculate_order" where 1=1
+        <if test="userid !=null">
+            AND user_id =#{userid}
+        </if>
+        <if test="code !=null">
+            AND coin_code =#{code}
+        </if>
+        <if test="state !=null">
+            AND "status" =#{state}
+        </if>
+        <if test="type !=null">
+            AND "type" =#{type}
+        </if>
+        <if test="pairL!=null">
+            and coin_code like #{pairL}||'_%'
+        </if>
+        <if test="pairR!=null">
+            and coin_code like '%_'||#{pairR}
+        </if>
+        <if test="startTime!=null">
+            and time > #{startTime}
+        </if>
+        <if test="endTime!=null">
+            and time &lt; #{endTime}
+        </if>
+    </select>
+
+    <update id="updateEmptyOrder">
+        update ag_admin_v1."cola_caculate_order"
+        set status = #{state}
+        where id = #{id}
+          and (count = 0 or total = 0)
+    </update>
+    <update id="updateOrderState">
+        update ag_admin_v1."cola_caculate_order"
+        set status = #{state}
+        where id = #{id}
+    </update>
+    <update id="updateUnCompletedOrder" parameterType="java.util.List">
+        update ag_admin_v1."cola_caculate_order"
+        set  count=
+        <foreach collection="list" item="item" index="index"
+                 separator=" " open="case id" close="end">
+            when #{item.id} then #{item.count}
+        </foreach>,
+          total=
+        <foreach collection="list" item="item" index="index"
+                 separator=" " open="case id" close="end">
+            when #{item.id} then #{item.total}
+        </foreach>
+        where id in
+        <foreach collection="list" index="index" item="item"
+                 separator="," open="(" close=")">
+            #{item.id}
+        </foreach>
+    </update>
+
+
+
+    <update id="updateCompletedOrder">
+        update ag_admin_v1."cola_caculate_order" set status='complete' ,total=0,count=0 where
+        id in
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and ag_admin_v1."cola_caculate_order".status='pending';
+
+    </update>
+
+
+    <update id="reduceCount" parameterType="com.bitcola.caculate.entity.ColaOrder">
+        UPDATE ag_admin_v1."cola_caculate_order"
+        SET count = count - #{count},
+            total = total - #{total}
+        WHERE id = #{id}
+          and status = 'pending'
+          and count - #{count} >= 0
+          and total - #{total} >= 0;
+    </update>
+
+    <select id="orderManagement" resultType="java.util.Map">
+        select t1.id,
+        t1.type,
+        t1.time,
+        t1.price as price,
+        t1.status,
+        t1.coin_code as pair,
+        (CASE t1.TYPE WHEN 'buy' THEN t1.origin_total/t1.price ELSE t1.origin_total END ) as number,
+        (CASE t1.TYPE WHEN 'buy' THEN t1.origin_total ELSE t1.price*t1.origin_total END ) as amount,
+        (CASE t1.TYPE WHEN 'buy' THEN COALESCE( avg(t2.price),0) ELSE t1.price END ) as avgPrice,
+        (CASE t1.TYPE WHEN 'buy' THEN COALESCE(sum(t2.from_count),0) ELSE t1.origin_total-t1.count END ) as
+        completeNumber
+        from ag_admin_v1.cola_caculate_order t1
+        left join ag_admin_v1.cola_exchange_log as t2 on t1.id = t2.to_order_id
+        where 1=1
+        <if test="userId !=null and userId != ''">
+            AND t1.user_id =#{userId}
+        </if>
+        <if test="code !=null and code != ''">
+            AND t1.coin_code =#{code}
+        </if>
+        <if test="state !=null and state != ''">
+            AND t1."status" =#{state}
+        </if>
+        <if test="type !=null and type != ''">
+            AND t1."type" =#{type}
+        </if>
+        <if test="pairL!=null and pairL != ''">
+            and t1.coin_code like #{pairL}||'_%'
+        </if>
+        <if test="pairR!=null and pairR != ''">
+            and t1.coin_code like '%_'||#{pairR}
+        </if>
+        <if test="startTime!=null">
+            and t1.time > #{startTime}
+        </if>
+        <if test="endTime!=null">
+            and t1.time &lt; #{endTime}
+        </if>
+        group by t1.id,t1.type,t1.time,t1.price,t1.origin_total,t1.status,t1.coin_code,t1.count
+        order by t1.time desc limit #{size} OFFSET (#{size}*(#{page}-1))
+    </select>
+
+    <select id="countOrderManagement" resultType="java.lang.Long">
+
+        select count(1)
+        from ag_admin_v1.cola_caculate_order t1
+        where 1=1
+        <if test="userId !=null and userId != ''">
+            AND t1.user_id =#{userId}
+        </if>
+        <if test="code !=null and code != ''">
+            AND t1.coin_code =#{code}
+        </if>
+        <if test="state !=null and state != ''">
+            AND t1."status" =#{state}
+        </if>
+        <if test="type !=null and type != ''">
+            AND t1."type" =#{type}
+        </if>
+        <if test="pairL!=null and pairL != ''">
+            and t1.coin_code like #{pairL}||'_%'
+        </if>
+        <if test="pairR!=null and pairR != ''">
+            and t1.coin_code like '%_'||#{pairR}
+        </if>
+        <if test="startTime!=null and startTime != ''">
+            and t1.time > #{startTime}
+        </if>
+        <if test="endTime!=null and endTime != ''">
+            and t1.time &lt; #{endTime}
+        </if>
+    </select>
+    <select id="orderHistory" resultType="java.util.Map">
+        SELECT
+        t1.ID,
+        t1.TYPE,
+        t1.TIME,
+        t1.price AS price,
+        (CASE t1.TYPE WHEN 'buy' THEN t1.origin_total / t1.price ELSE t1.origin_total END ) as amount,
+        (CASE t1.TYPE WHEN 'buy' THEN t1.origin_total ELSE t1.price * t1.origin_total END ) as total,
+        t1.status,
+        t1.coin_code AS pair,
+        COALESCE(sum(t2.from_count),0) vol
+        FROM
+        ag_admin_v1.cola_caculate_order AS t1
+        left join ag_admin_v1.cola_exchange_log as t2 on t1.id = t2.to_order_id or t1.id = t2.from_order_id
+        WHERE t1.user_id = #{userId}
+        <choose>
+            <when test="isPending !=null and isPending == 1">
+                and t1.status = 'pending'
+            </when>
+            <otherwise>
+                and t1.status &lt;> 'pending'
+            </otherwise>
+        </choose>
+        <if test="code !=null and code != ''">
+            AND t1.coin_code =#{code}
+        </if>
+        <if test="type !=null and type != ''">
+            AND t1."type" =#{type}
+        </if>
+        <if test="timestamp > 0 ">
+            and t1.time &lt; #{timestamp}
+        </if>
+        group by t1.id,t1.type,t1.time,t1.price,t1.origin_total,t1.status,t1.coin_code
+        order by t1.time desc limit #{size}
+    </select>
+    <select id="orderHistoryDetail" resultType="java.util.Map">
+        select from_order_id ,to_order_id,price,to_count as count,type,from_fee,to_fee ,from_count,to_count,user_id as
+        from_user_id, to_user_id from ag_admin_v1.cola_exchange_log where from_order_id in
+        <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        or
+        to_order_id in
+        <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        order by time desc
+    </select>
+</mapper>

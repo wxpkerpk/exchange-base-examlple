@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitcola.exchange.mapper.ScriptMapper">
+
+    <resultMap id="pairScaleMap" type="com.bitcola.exchange.script.data.PairScale">
+        <result property="pair" column="pair"/>
+        <result property="priceScale" column="price_scale"/>
+        <result property="amountScale" column="amount_scale"/>
+    </resultMap>
+
+    <resultMap id="balanceMap" type="com.bitcola.exchange.script.vo.BalanceDetail">
+        <result property="coinCode" column="coin_code"/>
+        <result property="aAvailable" column="balance_available"/>
+        <result property="aFrozen" column="balance_frozen"/>
+    </resultMap>
+
+
+
+    <select id="getPairScale" resultMap="pairScaleMap">
+        select coin_code ||'_'|| symbol as pair,price_scale,amount_scale from ag_admin_v1.cola_coin_symbol
+    </select>
+
+    <select id="getBalance" resultMap="balanceMap">
+        select coin_code,balance_available,balance_frozen from ag_admin_v1.cola_me_balance where user_id = #{userId}
+    </select>
+
+</mapper>

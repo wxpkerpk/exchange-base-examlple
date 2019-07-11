@@ -1,0 +1,101 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>WebSoket Demo</title>
+    <script type="text/JavaScript">
+        // tips: WebSocket 调试脚本
+        var WebSocket = WebSocket || window.WebSocket || window.MozWebSocket;
+        // 验证浏览器是否支持WebSocket协议
+        if (!WebSocket) {
+            alert("WebSocket not supported by this browser!");
+        } else {
+
+            function Display() {
+                // 载入上次记录的数据 //...
+                console.log("websocket 测试");
+            }
+
+
+            function CreateConnect() {
+                webSocket = new WebSocket('ws://112.74.59.207:8765/webSocket/v2');
+                webSocket.onopen = function (ev) {
+                    console.log("ok");
+                    //     send({
+                    //         "subscribe": [
+                    //             "kline_A_S_1m",
+                    //             "depth_A_S" +
+                    //             "",
+                    //             "price_A_S",
+                    //             "order_A_S",
+                    //             "personOrder_100"
+                    //         ]
+                    //     });
+                    // };
+                    webSocket.onclose = function (ev) {
+                        console.log("close")
+                    };
+                    webSocket.onerror = function (ev) {
+                        console.log("error")
+                    };
+                    webSocket.onmessage = function (ev) {
+                        console.log(ev);
+                    }
+                }
+            }
+
+            function send(msg) {
+                webSocket.send(JSON.stringify(msg));
+            }
+
+
+            function SendMsg(g_ws) {
+                var arr = []
+                for (var i = 0; i < 10000; i++) {
+                    arr.push(i)
+                }
+
+                var msg1 = {
+                    subscribe: arr
+                }
+
+                var msg = JSON.stringify(JSON.stringify(msg1))
+                if (g_ws != null) {
+                    //alert(msg.value);
+                    g_ws.send(msg);
+                } else {
+                }
+            }
+
+            function CloseConnect() {
+                console.log("CloseConnect()");
+                if (g_ws != null) {
+                    g_ws.close();
+                }
+            }
+
+
+            for (var i = 0; i < 100000; i++) {
+                var ws = CreateConnect()
+                SendMsg(ws)
+
+                SendMsg(ws)
+                console.log("send success")
+
+
+            }
+
+
+        }
+    </script>
+</head>
+
+<div id="valueLabel"></div>
+<textarea rows="20" cols="30" id="contentId"></textarea>
+<br/>
+<input name="wsUrl" id="wsUrlId" value="ws://112.74.59.207:8765/webSocket/v2"/>
+<button id="createButton" onClick="javascript:CreateConnect()">Create</button>
+<br/>
+<input name="message" id="messageId" value="Hello, Server!"/>
+<button id="sendButton" onClick="javascript:SendMsg()">Send</button>
+</body>
+</html>

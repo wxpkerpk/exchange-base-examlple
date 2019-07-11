@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitcola.activity.mapper.SystemMapper">
+
+    <select id="selectAllUserId" resultType="java.lang.String">
+        select sys_user_id from ag_admin_v1.cola_user
+    </select>
+
+    <update id="initInnerTestUserBalance">
+        update ag_admin_v1.cola_me_balance set balance_available = #{number},
+            sign = ag_admin_v1.makesign(id,#{number},balance_frozen,#{key})
+         where user_id = #{id} and coin_code = #{coin}
+           and ag_admin_v1.checksign(sign,id,balance_available,balance_frozen,#{key}) = true
+    </update>
+
+
+</mapper>
